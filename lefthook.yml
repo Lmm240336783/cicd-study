@@ -1,0 +1,8 @@
+commit-msg:
+  commands:
+    # 使用 Node.js 脚本进行跨平台检查
+    message-format:
+      run: node scripts/check-commit-msg.mjs {1}
+      fail_text: |
+        ❌ Commit message 格式不符合 Conventional Commits 规范
+        💡 修改后重新提交即可
