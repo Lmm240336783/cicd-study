@@ -10,7 +10,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "prepare": "lefthook install"
+    "prepare": "lefthook install -f"
   },
   "dependencies": {
     "@ant-design/icons": "~6.2.2",
