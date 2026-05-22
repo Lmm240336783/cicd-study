@@ -213,7 +213,7 @@ export default async function HomePage() {
     <div className="mx-auto w-full max-w-[92rem] px-4 pb-12 pt-6 md:px-6 md:pb-16">
       <FeaturedStripSection
         eyebrow="Hot Collection"
-        titleLines={["看过", "电视剧"]}
+        titleLines={["推荐", "电视剧"]}
         summary="记录我看过的最值得收藏与安利的剧，像私人片单的首页封面。"
         ctaHref="/shows"
         ctaLabel="去看看 →"
