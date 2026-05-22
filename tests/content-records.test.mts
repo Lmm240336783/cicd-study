@@ -8,6 +8,10 @@ import {
   imagePayloadToInsertRecord,
   imageRecordToItem,
   isMissingContentTableError,
+  musicPayloadToInsertRecord,
+  musicRecordToItem,
+  singerPayloadToInsertRecord,
+  singerRecordToItem,
   showPayloadToInsertRecord,
   showRecordToItem,
 } from "../src/lib/server/content/records.ts";
@@ -152,6 +156,96 @@ test("maps show create payloads to Supabase insert records", () => {
       poster_url: "https://example.com/dark.jpg",
       summary: "时间循环。",
       recommend_reason: "严谨。",
+      is_featured: true,
+      status: "published",
+    },
+  );
+});
+
+test("maps Supabase singer records to public singer items", () => {
+  assert.deepEqual(
+    singerRecordToItem({
+      id: "singer-1",
+      name: "Luna Park",
+      photo_url: "https://example.com/luna.jpg",
+      is_featured: true,
+      status: "published",
+      created_at: "2026-05-08T00:00:00.000Z",
+      updated_at: "2026-05-09T00:00:00.000Z",
+    }),
+    {
+      id: "singer-1",
+      name: "Luna Park",
+      photoUrl: "https://example.com/luna.jpg",
+      isFeatured: true,
+      status: "published",
+      createdAt: "2026-05-08T00:00:00.000Z",
+      updatedAt: "2026-05-09T00:00:00.000Z",
+    },
+  );
+});
+
+test("maps Supabase music records to public music items", () => {
+  assert.deepEqual(
+    musicRecordToItem({
+      id: "music-1",
+      title: "Midnight Radio",
+      singer_id: "singer-1",
+      album: "Night Drive",
+      genre: "Synth Pop",
+      duration: "03:42",
+      cover_url: "https://example.com/music.jpg",
+      description: "Night drive anthem",
+      is_featured: true,
+      status: "published",
+      created_at: "2026-05-08T00:00:00.000Z",
+      updated_at: "2026-05-09T00:00:00.000Z",
+    }),
+    {
+      id: "music-1",
+      title: "Midnight Radio",
+      singerId: "singer-1",
+      album: "Night Drive",
+      genre: "Synth Pop",
+      duration: "03:42",
+      coverUrl: "https://example.com/music.jpg",
+      description: "Night drive anthem",
+      isFeatured: true,
+      status: "published",
+      createdAt: "2026-05-08T00:00:00.000Z",
+      updatedAt: "2026-05-09T00:00:00.000Z",
+    },
+  );
+});
+
+test("maps singer and music create payloads to Supabase insert records", () => {
+  assert.deepEqual(singerPayloadToInsertRecord({ name: "  Luna Park  ", photoUrl: " https://example.com/luna.jpg ", isFeatured: true, status: "published" }), {
+    name: "  Luna Park  ",
+    photo_url: " https://example.com/luna.jpg ",
+    is_featured: true,
+    status: "published",
+  });
+
+  assert.deepEqual(
+    musicPayloadToInsertRecord({
+      title: "  Midnight Radio  ",
+      singerId: "singer-1",
+      album: " Night Drive ",
+      genre: " Synth Pop ",
+      duration: " 03:42 ",
+      coverUrl: " https://example.com/music.jpg ",
+      description: " Night drive anthem ",
+      isFeatured: true,
+      status: "published",
+    }),
+    {
+      title: "  Midnight Radio  ",
+      singer_id: "singer-1",
+      album: " Night Drive ",
+      genre: " Synth Pop ",
+      duration: " 03:42 ",
+      cover_url: " https://example.com/music.jpg ",
+      description: " Night drive anthem ",
       is_featured: true,
       status: "published",
     },

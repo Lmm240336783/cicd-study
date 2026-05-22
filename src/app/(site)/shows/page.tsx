@@ -66,7 +66,7 @@ export default async function PublicShowsPage() {
               className={cn(styles.shelfCard, "group block overflow-hidden rounded-[16px] bg-[#fff9e8]")}
             >
               <div
-                className={cn(styles.mediaCard, "w-full transition duration-300 group-hover:scale-[1.02]")}
+                className={cn(styles.mediaCardPlain, "w-full transition duration-300 group-hover:scale-[1.02]")}
                 style={{
                   ...posterCoverStyle(item.posterUrl, index),
                   height: `${showCardHeight(index)}px`,

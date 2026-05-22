@@ -2,10 +2,16 @@ import type {
   ContentStatus,
   CreateImageTagPayload,
   CreateImagePayload,
+  CreateMusicPayload,
+  CreateSingerPayload,
   CreateShowPayload,
+  MusicCollectionItem,
   ImageTagItem,
   ImageCollectionItem,
+  SingerCollectionItem,
   ShowCollectionItem,
+  UpdateMusicPayload,
+  UpdateSingerPayload,
   UpdateImageTagPayload,
   UpdateImagePayload,
   UpdateShowPayload,
@@ -49,6 +55,31 @@ export type ShowRecord = {
   updated_at: string;
 };
 
+export type SingerRecord = {
+  id: string;
+  name: string;
+  photo_url: string;
+  is_featured: boolean | null;
+  status: ContentStatus | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type MusicRecord = {
+  id: string;
+  title: string;
+  singer_id: string;
+  album: string | null;
+  genre: string | null;
+  duration: string | null;
+  cover_url: string | null;
+  description: string | null;
+  is_featured: boolean | null;
+  status: ContentStatus | null;
+  created_at: string;
+  updated_at: string;
+};
+
 type ImageWriteRecord = {
   title?: string;
   description?: string;
@@ -74,6 +105,25 @@ type ShowWriteRecord = {
   poster_url?: string;
   summary?: string;
   recommend_reason?: string;
+  is_featured?: boolean;
+  status?: ContentStatus;
+};
+
+type SingerWriteRecord = {
+  name?: string;
+  photo_url?: string;
+  is_featured?: boolean;
+  status?: ContentStatus;
+};
+
+type MusicWriteRecord = {
+  title?: string;
+  singer_id?: string;
+  album?: string;
+  genre?: string;
+  duration?: string;
+  cover_url?: string;
+  description?: string;
   is_featured?: boolean;
   status?: ContentStatus;
 };
@@ -207,6 +257,87 @@ export function showPayloadToUpdateRecord(payload: UpdateShowPayload) {
     poster_url: payload.posterUrl,
     summary: payload.summary,
     recommend_reason: payload.recommendReason,
+    is_featured: payload.isFeatured,
+    status: payload.status,
+  });
+}
+
+/** 灏?Supabase 歌手记录转换为前台歌手模型。*/
+export function singerRecordToItem(record: SingerRecord): SingerCollectionItem {
+  return {
+    id: record.id,
+    name: record.name,
+    photoUrl: record.photo_url,
+    isFeatured: record.is_featured ?? false,
+    status: record.status ?? "draft",
+    createdAt: record.created_at,
+    updatedAt: record.updated_at,
+  };
+}
+
+/** 将歌手创建参数转换为 Supabase 插入记录。*/
+export function singerPayloadToInsertRecord(payload: CreateSingerPayload): SingerWriteRecord {
+  return {
+    name: payload.name,
+    photo_url: payload.photoUrl,
+    is_featured: payload.isFeatured ?? false,
+    status: payload.status ?? "draft",
+  };
+}
+
+/** 将歌手更新参数转换为 Supabase 更新记录。*/
+export function singerPayloadToUpdateRecord(payload: UpdateSingerPayload) {
+  return compactRecord<SingerWriteRecord>({
+    name: payload.name,
+    photo_url: payload.photoUrl,
+    is_featured: payload.isFeatured,
+    status: payload.status,
+  });
+}
+
+/** 将 Supabase 音乐记录转换为前台音乐模型。*/
+export function musicRecordToItem(record: MusicRecord): MusicCollectionItem {
+  return {
+    id: record.id,
+    title: record.title,
+    singerId: record.singer_id,
+    album: record.album ?? "",
+    genre: record.genre ?? "",
+    duration: record.duration ?? "",
+    coverUrl: record.cover_url ?? "",
+    description: record.description ?? "",
+    isFeatured: record.is_featured ?? false,
+    status: record.status ?? "draft",
+    createdAt: record.created_at,
+    updatedAt: record.updated_at,
+  };
+}
+
+/** 将音乐创建参数转换为 Supabase 插入记录。*/
+export function musicPayloadToInsertRecord(payload: CreateMusicPayload): MusicWriteRecord {
+  return {
+    title: payload.title,
+    singer_id: payload.singerId,
+    album: payload.album ?? "",
+    genre: payload.genre ?? "",
+    duration: payload.duration ?? "",
+    cover_url: payload.coverUrl ?? "",
+    description: payload.description ?? "",
+    is_featured: payload.isFeatured ?? false,
+    status: payload.status ?? "draft",
+  };
+}
+
+/** 将音乐更新参数转换为 Supabase 更新记录。*/
+export function musicPayloadToUpdateRecord(payload: UpdateMusicPayload) {
+  return compactRecord<MusicWriteRecord>({
+    title: payload.title,
+    singer_id: payload.singerId,
+    album: payload.album,
+    genre: payload.genre,
+    duration: payload.duration,
+    cover_url: payload.coverUrl,
+    description: payload.description,
     is_featured: payload.isFeatured,
     status: payload.status,
   });

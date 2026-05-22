@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { listFeaturedImages, listFeaturedShows } from "@/lib/server/content/store";
+import { listFeaturedImages, listFeaturedShows, listFeaturedSingers } from "@/lib/server/content/store";
 import type { HomePublicData } from "@/types";
 
 /** 返回首页接口：一次性打包精选图片和精选电视剧，减少前端首页的请求次数。 */
@@ -8,6 +8,7 @@ export async function GET() {
   const payload: HomePublicData = {
     featuredImages: await listFeaturedImages(6),
     featuredShows: await listFeaturedShows(6),
+    featuredSingers: await listFeaturedSingers(4),
   };
 
   // `NextResponse.json({ data })` 会把对象序列化成 JSON 返回给浏览器或前端 fetch。

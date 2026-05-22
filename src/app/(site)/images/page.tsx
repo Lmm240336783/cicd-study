@@ -70,7 +70,7 @@ export default async function PublicImagesPage() {
             >
               <Link href={`/images/${item.id}`} className="block cursor-pointer">
                 <div
-                  className={cn(styles.mediaCard, "w-full transition duration-300 group-hover:scale-[1.02]")}
+                  className={cn(styles.mediaCardPlain, "w-full transition duration-300 group-hover:scale-[1.02]")}
                   style={{
                     ...imageCoverStyle(item.imageUrl, index),
                     height: `${imageCardHeight(index)}px`,

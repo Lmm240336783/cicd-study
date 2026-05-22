@@ -34,7 +34,7 @@ function RelatedShowCard({ item }: { item: ShowCollectionItem }) {
       className={cn(styles.detailRelatedCard, "group block overflow-hidden rounded-[18px] bg-[#161625] transition")}
     >
       <div
-        className={cn(styles.mediaCard, "h-40 bg-cover bg-center bg-no-repeat transition duration-300 group-hover:brightness-105")}
+        className={cn(styles.mediaCardPlain, "h-40 bg-cover bg-center bg-no-repeat transition duration-300 group-hover:brightness-105")}
         style={relatedShowCoverStyle(item)}
       />
       <div className="space-y-1.5 p-3">

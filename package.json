@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "test": "npx --yes tsx@3.14.0 --require ./tests/setup-web-api.cjs --test tests/auth-session.test.mts tests/content-records.test.mts tests/admin-dashboard-core.test.mts tests/admin-navigation.test.mts tests/shared-components.test.mts tests/image-manager-core.test.mts tests/show-manager-core.test.mts tests/public-shows-page.test.mts",
+    "test": "npx --yes tsx@3.14.0 --require ./tests/setup-web-api.cjs --test tests/auth-session.test.mts tests/content-records.test.mts tests/admin-dashboard-core.test.mts tests/admin-navigation.test.mts tests/shared-components.test.mts tests/image-manager-core.test.mts tests/show-manager-core.test.mts tests/public-shows-page.test.mts tests/public-music-page.test.mts",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",

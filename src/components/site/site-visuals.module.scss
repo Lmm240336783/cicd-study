@@ -113,6 +113,13 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.32);
 }
 
+.musicNavActive {
+  background: linear-gradient(90deg, #7dd3fc 0%, #a78bfa 52%, #f9a8d4 100%);
+  box-shadow:
+    0 10px 22px rgba(125, 211, 252, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32);
+}
+
 .pinkMoreButton {
   background: #f5a3c4;
   color: #ffffff;
@@ -335,12 +342,84 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.74);
 }
 
+.musicSurface {
+  border: 1px solid #d6dcff;
+  background: linear-gradient(180deg, #f8fbff 0%, #f2f6ff 100%);
+  box-shadow:
+    0 22px 54px rgba(103, 112, 190, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.76);
+}
+
+.musicDetailShell {
+  border: 1px solid rgba(186, 197, 255, 0.46);
+  background:
+    radial-gradient(circle at 10% 14%, rgba(167, 139, 250, 0.2), transparent 20%),
+    radial-gradient(circle at 88% 8%, rgba(125, 211, 252, 0.18), transparent 20%),
+    linear-gradient(180deg, #10131c 0%, #171a27 100%);
+  box-shadow:
+    0 28px 68px rgba(10, 14, 28, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.musicSingerCard {
+  border: 1px solid #d8e0ff;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(244, 247, 255, 0.96));
+  box-shadow:
+    0 12px 28px rgba(103, 112, 190, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.82);
+  transition:
+    transform 0.28s ease,
+    box-shadow 0.28s ease,
+    border-color 0.28s ease;
+}
+
+.musicSingerCard:hover {
+  transform: translateY(-3px);
+  border-color: #b6c3ff;
+  box-shadow:
+    0 16px 32px rgba(103, 112, 190, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.86);
+}
+
+.musicTrackCard {
+  border: 1px solid #d8e0ff;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow:
+    0 12px 28px rgba(103, 112, 190, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.82);
+  transition:
+    transform 0.28s ease,
+    box-shadow 0.28s ease,
+    border-color 0.28s ease;
+}
+
+.musicTrackCard:hover {
+  transform: translateY(-2px);
+  border-color: #b6c3ff;
+  box-shadow:
+    0 16px 30px rgba(103, 112, 190, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.86);
+}
+
+.musicMoreButton {
+  background: linear-gradient(90deg, #7dd3fc 0%, #a78bfa 100%);
+  color: #10131c;
+  box-shadow:
+    0 10px 22px rgba(125, 211, 252, 0.16),
+    0 12px 24px rgba(167, 139, 250, 0.16);
+}
+
 .heroSurface {
   border: 2px solid #f0dca7;
   background: linear-gradient(180deg, #fff8dc 0%, #fffdf7 100%);
   box-shadow:
     0 22px 56px rgba(201, 154, 47, 0.16),
     inset 0 1px 0 rgba(255, 255, 255, 0.68);
+}
+
+.imageHeroSurface,
+.singerHeroSurface {
+  background: linear-gradient(180deg, #fff8dc 0%, #fffdf7 100%);
 }
 
 .promoCard {
@@ -369,6 +448,11 @@
 
 .promoCard::after {
   display: none;
+}
+
+.imagePromoCard::before {
+  left: -22px;
+  right: auto;
 }
 
 .panelHeader {
@@ -431,6 +515,14 @@
   background-repeat: no-repeat;
   background-size: cover;
   isolation: isolate;
+}
+
+.mediaCardPlain {
+  position: relative;
+  overflow: hidden;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
 }
 
 .masonryColumns {

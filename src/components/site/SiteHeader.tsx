@@ -29,17 +29,17 @@ const siteMenuItems: SiteMenuItem[] = [
   { href: "/images", label: "图片" },
   { href: "/shows", label: "电视剧" },
   { label: "电影" },
-  { label: "音乐" },
+  { href: "/music", label: "音乐" },
   { label: "书籍" },
   { label: "关于我" },
 ];
 
-/** 渲染首页图标。 */
+/** Render the home icon. */
 function HomeIcon() {
   return <span aria-hidden="true" className={styles.homeNavIcon} />;
 }
 
-/** 渲染搜索图标。 */
+/** Render the search icon. */
 function SearchIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5">
@@ -49,7 +49,7 @@ function SearchIcon() {
   );
 }
 
-/** 判断导航项是否匹配当前路径。 */
+/** Check whether a nav item matches the current path. */
 function isActivePath(pathname: string, href: string) {
   if (href === "/") {
     return pathname === "/";
@@ -58,7 +58,7 @@ function isActivePath(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-/** 返回不同前台导航项的激活态样式。 */
+/** Return the active style for top navigation items. */
 function getActiveNavClass(href: string) {
   if (href === "/images") {
     return cn(styles.imagesNavActive, "text-slate-950");
@@ -68,10 +68,14 @@ function getActiveNavClass(href: string) {
     return cn(styles.showsNavActive, "text-slate-950");
   }
 
+  if (href === "/music") {
+    return cn(styles.musicNavActive, "text-slate-950");
+  }
+
   return "bg-[#f7d95f] text-slate-950 shadow-[0_10px_22px_rgba(247,217,95,0.44)]";
 }
 
-/** 返回安全的站内登录后跳转路径。 */
+/** Filter a safe internal return path. */
 function getSafeReturnPath(value: string | null) {
   if (!value || !value.startsWith("/") || value.startsWith("//")) {
     return "";
@@ -80,7 +84,7 @@ function getSafeReturnPath(value: string | null) {
   return value;
 }
 
-/** 渲染前台顶部导航栏。 */
+/** Render the site header. */
 export function SiteHeader({ session }: SiteHeaderProps) {
   const pathname = usePathname() ?? "/";
   const router = useRouter();
@@ -94,13 +98,13 @@ export function SiteHeader({ session }: SiteHeaderProps) {
   const currentAuthMode = urlAuthMode ?? authMode;
   const authOpen = Boolean(urlAuthMode) || manualAuthOpen;
 
-  /** 打开指定模式的登录注册弹框。 */
+  /** Open the auth modal in a specific mode. */
   function openAuthModal(mode: AuthModalMode) {
     setAuthMode(mode);
     setManualAuthOpen(true);
   }
 
-  /** 关闭登录注册弹框并清理鉴权查询参数。 */
+  /** Close the auth modal and clean up query params. */
   function closeAuthModal() {
     setManualAuthOpen(false);
     if (authParam === "login" || authParam === "register") {
@@ -108,7 +112,7 @@ export function SiteHeader({ session }: SiteHeaderProps) {
     }
   }
 
-  /** 登录或注册成功后刷新会话状态。 */
+  /** Refresh the session state after login or register. */
   function handleAuthenticated() {
     setManualAuthOpen(false);
     if (returnPath) {
@@ -121,7 +125,7 @@ export function SiteHeader({ session }: SiteHeaderProps) {
     router.refresh();
   }
 
-  /** 退出登录并在当前页面重新打开登录弹框。 */
+  /** Sign out and reopen the login modal on the current page. */
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
     setAuthMode("login");
@@ -158,9 +162,7 @@ export function SiteHeader({ session }: SiteHeaderProps) {
                   href={item.href}
                   className={cn(
                     "flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 py-2.5 text-sm font-semibold transition md:px-5 md:py-3",
-                    active
-                      ? getActiveNavClass(item.href)
-                      : "text-slate-800 hover:bg-[#fff2c2] hover:text-slate-950",
+                    active ? getActiveNavClass(item.href) : "text-slate-800 hover:bg-[#fff2c2] hover:text-slate-950",
                   )}
                 >
                   {item.href === "/" ? <HomeIcon /> : null}

@@ -38,6 +38,31 @@ export type ShowCollectionItem = {
   updatedAt: string;
 };
 
+export type SingerCollectionItem = {
+  id: string;
+  name: string;
+  photoUrl: string;
+  isFeatured: boolean;
+  status: ContentStatus;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type MusicCollectionItem = {
+  id: string;
+  title: string;
+  singerId: string;
+  album: string;
+  genre: string;
+  duration: string;
+  coverUrl: string;
+  description: string;
+  isFeatured: boolean;
+  status: ContentStatus;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type CreateImageTagPayload = {
   name: string;
 };
@@ -49,4 +74,5 @@ export type UpdateImageTagPayload = {
 export type HomePublicData = {
   featuredImages: ImageCollectionItem[];
   featuredShows: ShowCollectionItem[];
+  featuredSingers: SingerCollectionItem[];
 };

@@ -6,16 +6,17 @@ export type RefModalState<TData extends RefModalData = RefModalData> = {
   data: TData;
 };
 
-/** 根据标题和本次参数生成打开状态，并保留默认数据。 */
+/** 根据标题和本次参数生成打开状态，并始终从默认数据重新构造本次弹框数据。 */
 export function openRefModalState<TData extends RefModalData>(
   current: RefModalState<TData>,
   title: string,
   data?: Partial<TData>,
+  baseData?: TData,
 ): RefModalState<TData> {
   return {
     open: true,
     title,
-    data: { ...current.data, ...(data ?? {}) } as TData,
+    data: { ...(baseData ?? current.data), ...(data ?? {}) } as TData,
   };
 }
 

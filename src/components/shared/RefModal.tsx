@@ -27,10 +27,11 @@ function RefModalInner<TData extends RefModalData = RefModalData>(
   { children, data, onCancel, ...modalProps }: RefModalProps<TData>,
   ref: React.ForwardedRef<RefModalRef<TData>>,
 ) {
+  const baseData = (data ?? {}) as TData;
   const [state, setState] = useState<RefModalState<TData>>({
     open: false,
     title: "",
-    data: (data ?? {}) as TData,
+    data: baseData,
   });
 
   const close = useCallback(() => {
@@ -38,8 +39,8 @@ function RefModalInner<TData extends RefModalData = RefModalData>(
   }, []);
 
   const open = useCallback((title: string, nextData?: Partial<TData>) => {
-    setState((current) => openRefModalState(current, title, nextData));
-  }, []);
+    setState((current) => openRefModalState(current, title, nextData, baseData));
+  }, [baseData]);
 
   const handleCancel = useCallback<NonNullable<ModalProps["onCancel"]>>(
     (event) => {

@@ -79,6 +79,26 @@ test("opens modal state with title and merged data", () => {
   );
 });
 
+test("opens modal state from base data instead of reusing stale edit fields", () => {
+  assert.deepEqual(
+    openRefModalState<{ source: string; id?: string; title?: string; mode?: "create" | "edit" }>(
+      {
+        open: false,
+        title: "编辑图片",
+        data: { source: "props", id: "img-1", title: "旧图片", mode: "edit" },
+      },
+      "新增图片",
+      { mode: "create" },
+      { source: "props" },
+    ),
+    {
+      open: true,
+      title: "新增图片",
+      data: { source: "props", mode: "create" },
+    },
+  );
+});
+
 test("closes modal state without dropping title or data", () => {
   assert.deepEqual(closeRefModalState({ open: true, title: "编辑图片", data: { id: "img-1" } }), {
     open: false,

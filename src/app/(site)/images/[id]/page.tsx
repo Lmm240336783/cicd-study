@@ -27,7 +27,7 @@ function RelatedImageCard({ item }: { item: ImageCollectionItem }) {
       className={cn(styles.detailRelatedCard, "group block overflow-hidden rounded-[18px] bg-[#fff8df] transition")}
     >
       <div
-        className={cn(styles.mediaCard, "h-36 bg-cover bg-center bg-no-repeat transition duration-300 group-hover:brightness-105")}
+        className={cn(styles.mediaCardPlain, "h-36 bg-cover bg-center bg-no-repeat transition duration-300 group-hover:brightness-105")}
         style={detailImageStyle(item)}
       />
       <div className="p-3">

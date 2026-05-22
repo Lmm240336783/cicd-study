@@ -40,3 +40,26 @@ export type ImportShowPayload = CreateShowPayload & {
 };
 
 export type UpdateShowPayload = Partial<CreateShowPayload>;
+
+export type CreateSingerPayload = {
+  name: string;
+  photoUrl: string;
+  isFeatured?: boolean;
+  status?: "draft" | "published";
+};
+
+export type UpdateSingerPayload = Partial<CreateSingerPayload>;
+
+export type CreateMusicPayload = {
+  title: string;
+  singerId: string;
+  album?: string;
+  genre?: string;
+  duration?: string;
+  coverUrl?: string;
+  description?: string;
+  isFeatured?: boolean;
+  status?: "draft" | "published";
+};
+
+export type UpdateMusicPayload = Partial<CreateMusicPayload>;
