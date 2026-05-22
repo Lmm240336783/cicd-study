@@ -1,0 +1,65 @@
+# GitHub Actions 主 CI 流程名称，会显示在 Actions 面板中。
+name: CI
+
+# 触发条件说明：
+# 1. pull_request：任意分支发起 PR 时都会触发，用于合并前校验。
+# 2. push：仅推送到 main / master 分支时触发，用于主干持续验证。
+# 3. workflow_dispatch：支持在 GitHub 页面手动点击运行，便于临时排查或补跑。
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+# 并发控制：
+# 相同分支（github.ref）只保留一个正在执行的 CI。
+# 当同一分支再次推送新提交时，会取消旧任务，避免浪费执行资源并确保结果对应最新代码。
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    # 当前唯一的 CI 任务，串行执行代码质量与构建校验。
+    name: Lint Typecheck Build
+    # 使用 GitHub 托管的最新版 Ubuntu 运行环境。
+    runs-on: ubuntu-latest
+    # 单次任务最长执行 20 分钟，超时会被自动终止，防止异常卡住。
+    timeout-minutes: 20
+
+    steps:
+      # 拉取仓库代码到 Runner，后续步骤都基于当前提交执行。
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 安装 pnpm 包管理器，并固定使用 10.x 主版本，避免不同版本带来行为差异。
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      # 安装 Node.js 20，并启用 pnpm 依赖缓存以提升 CI 重复执行速度。
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      # 严格按锁文件安装依赖。
+      # --frozen-lockfile 表示若 lock 文件与依赖声明不一致则直接失败，保证 CI 环境可复现。
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # 执行代码规范检查，尽早发现格式或静态规则问题。
+      - name: Lint
+        run: pnpm lint
+
+      # 执行 TypeScript 类型检查，捕获类型不匹配、缺失字段等编译前问题。
+      - name: Typecheck
+        run: pnpm typecheck
+
+      # 执行项目构建，验证生产构建链路是否正常。
+      - name: Build
+        run: pnpm build

@@ -1,0 +1,36 @@
+{
+  "name": "study-fully-dried",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "test": "npx --yes tsx@3.14.0 --require ./tests/setup-web-api.cjs --test tests/auth-session.test.mts tests/content-records.test.mts tests/admin-dashboard-core.test.mts tests/admin-navigation.test.mts tests/shared-components.test.mts tests/image-manager-core.test.mts tests/show-manager-core.test.mts tests/public-shows-page.test.mts tests/public-music-page.test.mts",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "prepare": "lefthook install -f"
+  },
+  "dependencies": {
+    "@ant-design/icons": "~6.2.2",
+    "@supabase/supabase-js": "^2.105.3",
+    "antd": "^6.3.7",
+    "classnames": "^2.5.1",
+    "next": "16.2.4",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.4",
+    "lefthook": "^2.1.6",
+    "sass": "^1.99.0",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
