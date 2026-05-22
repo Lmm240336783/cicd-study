@@ -214,7 +214,7 @@ export default async function HomePage() {
       <FeaturedStripSection
         eyebrow="Hot Collection"
         titleLines={["推荐", "电视剧"]}
-        summary="记录我看过的最值得收藏与安利的剧，像私人片单的首页封面。"
+        summary="记录看过的最值得收藏与安利的剧，像私人片单的首页封面。"
         ctaHref="/shows"
         ctaLabel="去看看 →"
         cards={showPosterCards}
