@@ -1,7 +1,6 @@
 import "server-only";
 
 import { randomUUID } from "node:crypto";
-import path from "node:path";
 import { createSupabaseAdminClient } from "@/lib/server/supabase/admin";
 
 const bucketName = process.env.SUPABASE_STORAGE_BUCKET;
@@ -26,18 +25,18 @@ function assertBucketName() {
   return bucketName;
 }
 
-/** Accept a PDF either by MIME type or a trusted .pdf filename suffix. */
-function isPdfUpload(filename: string, contentType?: string) {
-  return contentType === "application/pdf" || path.extname(filename).toLowerCase() === ".pdf";
+/** Accept only uploads whose MIME type is the expected PDF content type. */
+function isPdfUpload(contentType?: string) {
+  return contentType === "application/pdf";
 }
 
 /** Upload an admin book PDF into the shared Supabase storage bucket. */
 export async function uploadAdminPdfBinary({
   bytes,
   contentType,
-  filename,
+  filename: _filename,
 }: UploadAdminPdfBinaryInput): Promise<AdminPdfUploadResult> {
-  if (!isPdfUpload(filename, contentType)) {
+  if (!isPdfUpload(contentType)) {
     throw new Error("Invalid PDF file");
   }
 
