@@ -1,3 +1,5 @@
+import type { ContentStatus } from "./content";
+
 export type LoginFormValues = {
   email: string;
   password: string;
@@ -12,7 +14,7 @@ export type CreateBookPayload = {
   coverUrl: string;
   description?: string;
   pdfUrl: string;
-  status?: "draft" | "published";
+  status?: ContentStatus;
 };
 
 export type UpdateBookPayload = Partial<CreateBookPayload>;

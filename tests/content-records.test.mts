@@ -3,6 +3,7 @@ import test from "node:test";
 import { createContentApiErrorResponse } from "../src/lib/server/content/api-error.ts";
 import {
   bookPayloadToInsertRecord,
+  bookPayloadToUpdateRecord,
   bookRecordToItem,
   imageTagPayloadToInsertRecord,
   imageTagPayloadToUpdateRecord,
@@ -104,6 +105,22 @@ test("maps book create payloads to Supabase insert records", () => {
       description: "",
       pdf_url: "https://example.com/book.pdf",
       status: "draft",
+    },
+  );
+});
+
+test("maps book update payloads to compact Supabase update records", () => {
+  assert.deepEqual(
+    bookPayloadToUpdateRecord({
+      title: "深夜书店",
+      coverUrl: undefined,
+      description: "",
+      pdfUrl: undefined,
+      status: undefined,
+    }),
+    {
+      title: "深夜书店",
+      description: "",
     },
   );
 });
