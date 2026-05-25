@@ -14,6 +14,7 @@ export function BookManager() {
   const [form] = Form.useForm<BookManagerFormValues>();
   const initialValues = buildBookFormValues();
   const currentPdfUrl = Form.useWatch("pdfUrl", form) ?? "";
+  const normalizedPdfUrl = currentPdfUrl.trim();
 
   return (
     <div className="space-y-4">
@@ -73,14 +74,18 @@ export function BookManager() {
 
           <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3">
             <p className="text-sm font-medium text-slate-900">当前 PDF</p>
-            <a
-              href={currentPdfUrl || "#"}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-1 inline-flex text-sm text-sky-600 underline-offset-4 hover:underline"
-            >
-              {currentPdfUrl || "保存后在这里查看当前 PDF"}
-            </a>
+            {normalizedPdfUrl ? (
+              <a
+                href={normalizedPdfUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-1 inline-flex text-sm text-sky-600 underline-offset-4 hover:underline"
+              >
+                {normalizedPdfUrl}
+              </a>
+            ) : (
+              <p className="mt-1 text-sm text-slate-500">保存后在这里查看当前 PDF</p>
+            )}
           </div>
 
           <div className="mt-5 flex justify-end">

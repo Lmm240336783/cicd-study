@@ -96,5 +96,11 @@ test("renders the admin book manager shell with pdf upload affordances", () => {
   assert.match(source, /Form\.useWatch\("pdfUrl", form\)/);
   assert.match(source, /form=\{form\}/);
   assert.match(source, /currentPdfUrl/);
+  assert.match(source, /const normalizedPdfUrl = currentPdfUrl\.trim\(\);/);
+  assert.match(source, /normalizedPdfUrl \? \(/);
+  assert.match(source, /href=\{normalizedPdfUrl\}/);
+  assert.match(source, /\{normalizedPdfUrl\}/);
+  assert.match(source, /保存后在这里查看当前 PDF/);
+  assert.doesNotMatch(source, /href=\{currentPdfUrl \|\| "#"\}/);
   assert.match(source, /<Button[\s\S]*disabled[\s\S]*等待后端\/API 接入/);
 });
