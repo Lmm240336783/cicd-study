@@ -320,7 +320,7 @@ export function showPayloadToUpdateRecord(payload: UpdateShowPayload) {
   });
 }
 
-/** 灏?Supabase 歌手记录转换为前台歌手模型。*/
+/** 将 Supabase 歌手记录转换为前台歌手模型。*/
 export function singerRecordToItem(record: SingerRecord): SingerCollectionItem {
   return {
     id: record.id,
