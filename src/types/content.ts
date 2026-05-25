@@ -12,6 +12,17 @@ export type ImageCollectionItem = {
   updatedAt: string;
 };
 
+export type BookCollectionItem = {
+  id: string;
+  title: string;
+  coverUrl: string;
+  description: string;
+  pdfUrl: string;
+  status: ContentStatus;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type ImageTagItem = {
   id: string;
   name: string;

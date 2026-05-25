@@ -1,5 +1,7 @@
 import type {
+  BookCollectionItem,
   ContentStatus,
+  CreateBookPayload,
   CreateImageTagPayload,
   CreateImagePayload,
   CreateMusicPayload,
@@ -10,12 +12,24 @@ import type {
   ImageCollectionItem,
   SingerCollectionItem,
   ShowCollectionItem,
+  UpdateBookPayload,
   UpdateMusicPayload,
   UpdateSingerPayload,
   UpdateImageTagPayload,
   UpdateImagePayload,
   UpdateShowPayload,
 } from "@/types";
+
+export type BookRecord = {
+  id: string;
+  title: string;
+  cover_url: string;
+  description: string | null;
+  pdf_url: string;
+  status: ContentStatus | null;
+  created_at: string;
+  updated_at: string;
+};
 
 export type ImageRecord = {
   id: string;
@@ -80,6 +94,14 @@ export type MusicRecord = {
   updated_at: string;
 };
 
+export type BookWriteRecord = {
+  title?: string;
+  cover_url?: string;
+  description?: string;
+  pdf_url?: string;
+  status?: ContentStatus;
+};
+
 type ImageWriteRecord = {
   title?: string;
   description?: string;
@@ -137,6 +159,42 @@ export function isMissingContentTableError(error: { message: string } | null) {
 /** 移除对象中的 undefined 字段，避免更新时覆盖数据库默认值。 */
 function compactRecord<T extends Record<string, unknown>>(record: T) {
   return Object.fromEntries(Object.entries(record).filter(([, value]) => value !== undefined)) as Partial<T>;
+}
+
+/** 将 Supabase 书籍记录转换为前端书籍模型。 */
+export function bookRecordToItem(record: BookRecord): BookCollectionItem {
+  return {
+    id: record.id,
+    title: record.title,
+    coverUrl: record.cover_url,
+    description: record.description ?? "",
+    pdfUrl: record.pdf_url,
+    status: record.status ?? "draft",
+    createdAt: record.created_at,
+    updatedAt: record.updated_at,
+  };
+}
+
+/** 将书籍创建参数转换为 Supabase 插入记录。 */
+export function bookPayloadToInsertRecord(payload: CreateBookPayload): BookWriteRecord {
+  return {
+    title: payload.title,
+    cover_url: payload.coverUrl,
+    description: payload.description ?? "",
+    pdf_url: payload.pdfUrl,
+    status: payload.status ?? "draft",
+  };
+}
+
+/** 将书籍更新参数转换为 Supabase 更新记录。 */
+export function bookPayloadToUpdateRecord(payload: UpdateBookPayload) {
+  return compactRecord<BookWriteRecord>({
+    title: payload.title,
+    cover_url: payload.coverUrl,
+    description: payload.description,
+    pdf_url: payload.pdfUrl,
+    status: payload.status,
+  });
 }
 
 /** 将 Supabase 图片记录转换为前端图片模型。 */

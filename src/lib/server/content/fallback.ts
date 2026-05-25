@@ -1,6 +1,19 @@
-import type { ImageCollectionItem, MusicCollectionItem, SingerCollectionItem, ShowCollectionItem } from "@/types";
+import type { BookCollectionItem, ImageCollectionItem, MusicCollectionItem, SingerCollectionItem, ShowCollectionItem } from "@/types";
 
 const seedTimestamp = "2026-05-08T00:00:00.000Z";
+
+export const fallbackBooks: BookCollectionItem[] = [
+  {
+    id: "book-midnight-library",
+    title: "午夜图书馆",
+    coverUrl: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=1200&q=80&auto=format&fit=crop",
+    description: "适合放在公共书单里的默认示例书籍。",
+    pdfUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+    status: "published",
+    createdAt: seedTimestamp,
+    updatedAt: seedTimestamp,
+  },
+];
 
 export const fallbackImages: ImageCollectionItem[] = [
   {

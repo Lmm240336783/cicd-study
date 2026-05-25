@@ -7,6 +7,16 @@ export type RegisterFormValues = LoginFormValues & {
   name: string;
 };
 
+export type CreateBookPayload = {
+  title: string;
+  coverUrl: string;
+  description?: string;
+  pdfUrl: string;
+  status?: "draft" | "published";
+};
+
+export type UpdateBookPayload = Partial<CreateBookPayload>;
+
 export type CreateImagePayload = {
   title: string;
   description?: string;
