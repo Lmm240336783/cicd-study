@@ -77,6 +77,14 @@ test("builds update book payload from form values", () => {
   );
 });
 
+test("includes the book manager core test in the npm test script", () => {
+  const packageJson = JSON.parse(readFileSync("package.json", "utf8")) as {
+    scripts?: { test?: string };
+  };
+
+  assert.match(packageJson.scripts?.test ?? "", /tests\/book-manager-core\.test\.mts/);
+});
+
 test("renders the admin book manager shell with pdf upload affordances", () => {
   const source = readFileSync("src/components/admin/BookManager.tsx", "utf8");
 
@@ -84,4 +92,9 @@ test("renders the admin book manager shell with pdf upload affordances", () => {
   assert.match(source, /上传 PDF/);
   assert.match(source, /\/api\/admin\/books\/upload-pdf/);
   assert.match(source, /当前 PDF/);
+  assert.match(source, /Form\.useForm<BookManagerFormValues>\(\)/);
+  assert.match(source, /Form\.useWatch\("pdfUrl", form\)/);
+  assert.match(source, /form=\{form\}/);
+  assert.match(source, /currentPdfUrl/);
+  assert.match(source, /<Button[\s\S]*disabled[\s\S]*等待后端\/API 接入/);
 });

@@ -11,7 +11,9 @@ const bookStatusOptions = [
 
 /** 渲染后台图书管理的首版壳层界面。 */
 export function BookManager() {
+  const [form] = Form.useForm<BookManagerFormValues>();
   const initialValues = buildBookFormValues();
+  const currentPdfUrl = Form.useWatch("pdfUrl", form) ?? "";
 
   return (
     <div className="space-y-4">
@@ -27,6 +29,7 @@ export function BookManager() {
 
       <section className="rounded-2xl border border-slate-200 bg-white p-5">
         <Form<BookManagerFormValues>
+          form={form}
           layout="vertical"
           initialValues={initialValues}
           requiredMark={false}
@@ -71,17 +74,19 @@ export function BookManager() {
           <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3">
             <p className="text-sm font-medium text-slate-900">当前 PDF</p>
             <a
-              href={initialValues.pdfUrl || "#"}
+              href={currentPdfUrl || "#"}
               target="_blank"
               rel="noreferrer"
               className="mt-1 inline-flex text-sm text-sky-600 underline-offset-4 hover:underline"
             >
-              {initialValues.pdfUrl || "保存后在这里查看当前 PDF"}
+              {currentPdfUrl || "保存后在这里查看当前 PDF"}
             </a>
           </div>
 
           <div className="mt-5 flex justify-end">
-            <Button type="primary">保存图书信息</Button>
+            <Button type="primary" disabled>
+              等待后端/API 接入
+            </Button>
           </div>
         </Form>
       </section>
