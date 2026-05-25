@@ -16,7 +16,7 @@ import type {
   UpdateShowPayload,
 } from "@/types";
 import { createSupabaseAdminClient } from "@/lib/server/supabase/admin";
-import { fallbackBooks, fallbackImages, fallbackMusic, fallbackShows, fallbackSingers } from "@/lib/server/content/fallback";
+import { fallbackImages, fallbackMusic, fallbackShows, fallbackSingers } from "@/lib/server/content/fallback";
 import {
   bookPayloadToInsertRecord,
   bookPayloadToUpdateRecord,
@@ -66,16 +66,11 @@ function buildFallbackImageTags(): ImageTagItem[] {
   }));
 }
 
-/** 查询前台公开图片列表。*/
-/** List the admin-visible books, falling back to seed content when needed. */
+/** List the admin-visible books from the books table. */
 export async function listAdminBooks(): Promise<BookCollectionItem[]> {
   const { data, error } = await getContentClient().from("books").select("*").order("updated_at", {
     ascending: false,
   });
-
-  if (isMissingContentTableError(error)) {
-    return sortByUpdatedAtDesc(fallbackBooks);
-  }
 
   assertNoSupabaseError(error, "读取后台图书列表");
   return ((data ?? []) as BookRecord[]).map(bookRecordToItem);
