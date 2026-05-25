@@ -66,6 +66,31 @@ function buildFallbackImageTags(): ImageTagItem[] {
   }));
 }
 
+/** 查询前台公开图书列表。*/
+export async function listPublicBooks(): Promise<BookCollectionItem[]> {
+  const { data, error } = await getContentClient()
+    .from("books")
+    .select("*")
+    .eq("status", "published")
+    .order("updated_at", { ascending: false });
+
+  assertNoSupabaseError(error, "读取公开图书列表");
+  return ((data ?? []) as BookRecord[]).map(bookRecordToItem);
+}
+
+/** 查询前台公开图书详情。*/
+export async function getPublicBookById(id: string): Promise<BookCollectionItem | null> {
+  const { data, error } = await getContentClient()
+    .from("books")
+    .select("*")
+    .eq("id", id)
+    .eq("status", "published")
+    .maybeSingle();
+
+  assertNoSupabaseError(error, "读取图书详情");
+  return data ? bookRecordToItem(data as BookRecord) : null;
+}
+
 /** List the admin-visible books from the books table. */
 export async function listAdminBooks(): Promise<BookCollectionItem[]> {
   const { data, error } = await getContentClient().from("books").select("*").order("updated_at", {
