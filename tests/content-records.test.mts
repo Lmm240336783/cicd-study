@@ -107,6 +107,23 @@ test("maps book create payloads to Supabase insert records", () => {
       status: "draft",
     },
   );
+
+  assert.deepEqual(
+    bookPayloadToInsertRecord({
+      title: "纸上城",
+      coverUrl: "https://example.com/book-city-cover.jpg",
+      description: "城市与记忆的短篇集",
+      pdfUrl: "https://example.com/book-city.pdf",
+      status: "published",
+    }),
+    {
+      title: "纸上城",
+      cover_url: "https://example.com/book-city-cover.jpg",
+      description: "城市与记忆的短篇集",
+      pdf_url: "https://example.com/book-city.pdf",
+      status: "published",
+    },
+  );
 });
 
 test("maps book update payloads to compact Supabase update records", () => {
@@ -121,6 +138,21 @@ test("maps book update payloads to compact Supabase update records", () => {
     {
       title: "深夜书店",
       description: "",
+    },
+  );
+
+  assert.deepEqual(
+    bookPayloadToUpdateRecord({
+      coverUrl: "https://example.com/book-city-cover.jpg",
+      description: "补充了修订版前言",
+      pdfUrl: "https://example.com/book-city-revised.pdf",
+      status: "published",
+    }),
+    {
+      cover_url: "https://example.com/book-city-cover.jpg",
+      description: "补充了修订版前言",
+      pdf_url: "https://example.com/book-city-revised.pdf",
+      status: "published",
     },
   );
 });
