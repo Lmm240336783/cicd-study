@@ -7,7 +7,7 @@ import { buildBookFormValues } from "./book-manager-core";
 const bookStatusOptions = [
   { value: "draft", label: "草稿" },
   { value: "published", label: "已发布" },
-] as const;
+];
 
 /** 渲染后台图书管理的首版壳层界面。 */
 export function BookManager() {

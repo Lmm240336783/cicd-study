@@ -92,6 +92,10 @@ test("renders the admin book manager shell with pdf upload affordances", () => {
   assert.match(source, /上传 PDF/);
   assert.match(source, /\/api\/admin\/books\/upload-pdf/);
   assert.match(source, /当前 PDF/);
+  assert.match(source, /const bookStatusOptions = \[/);
+  assert.match(source, /\{ value: "draft", label: "草稿" \}/);
+  assert.match(source, /\{ value: "published", label: "已发布" \}/);
+  assert.doesNotMatch(source, /\] as const;/);
   assert.match(source, /Form\.useForm<BookManagerFormValues>\(\)/);
   assert.match(source, /Form\.useWatch\("pdfUrl", form\)/);
   assert.match(source, /form=\{form\}/);
