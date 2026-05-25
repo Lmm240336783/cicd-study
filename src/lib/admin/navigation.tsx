@@ -43,6 +43,19 @@ export const adminMenuGroups: AdminMenuGroup[] = [
     ],
   },
   {
+    key: "books",
+    label: "图书资料",
+    icon: <IconReport className="h-4 w-4" />,
+    routes: [
+      {
+        key: "admin-books",
+        path: "/admin/books",
+        label: "图书管理",
+        description: "管理图书封面、PDF 上传入口和发布状态。",
+      },
+    ],
+  },
+  {
     key: "shows",
     label: "电视剧推荐",
     icon: <IconReport className="h-4 w-4" />,
