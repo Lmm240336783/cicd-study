@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import type { CreateBookPayload } from "@/types";
 import { createAdminUnauthorizedResponse, getSessionFromRequest } from "@/lib/server/auth/cookie";
 import { normalizeCreateBookPayload } from "@/lib/server/content/book-payloads";
 import { createContentApiErrorResponse } from "@/lib/server/content/api-error";
@@ -14,12 +13,6 @@ function ensureAdminSession(request: NextRequest) {
   }
 
   return null;
-}
-
-/** Parse and normalize the admin create-book request body. */
-async function parseCreateBookPayload(request: NextRequest) {
-  const data = (await request.json()) as Partial<CreateBookPayload>;
-  return normalizeCreateBookPayload(data);
 }
 
 /** Return the admin-visible book list. */
@@ -43,7 +36,14 @@ export async function POST(request: NextRequest) {
     return unauthorized;
   }
 
-  const payload = await parseCreateBookPayload(request);
+  let payload: ReturnType<typeof normalizeCreateBookPayload> = null;
+
+  try {
+    payload = normalizeCreateBookPayload(await request.json());
+  } catch {
+    return NextResponse.json({ message: "Invalid book payload" }, { status: 400 });
+  }
+
   if (!payload) {
     return NextResponse.json({ message: "Invalid book payload" }, { status: 400 });
   }

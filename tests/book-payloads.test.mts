@@ -73,6 +73,16 @@ test("normalizeCreateBookPayload defaults description and status to draft", asyn
   );
 });
 
+test("normalizeCreateBookPayload rejects null, arrays, and primitive inputs", async () => {
+  const { normalizeCreateBookPayload } = await import("../src/lib/server/content/book-payloads.ts");
+
+  assert.equal(normalizeCreateBookPayload(null as never), null);
+  assert.equal(normalizeCreateBookPayload([] as never), null);
+  assert.equal(normalizeCreateBookPayload("book" as never), null);
+  assert.equal(normalizeCreateBookPayload(42 as never), null);
+  assert.equal(normalizeCreateBookPayload(true as never), null);
+});
+
 test("normalizeUpdateBookPayload trims provided fields and allows clearing description", async () => {
   const { normalizeUpdateBookPayload } = await import("../src/lib/server/content/book-payloads.ts");
 
@@ -111,4 +121,14 @@ test("normalizeUpdateBookPayload rejects unsupported status values", async () =>
     }),
     null,
   );
+});
+
+test("normalizeUpdateBookPayload rejects null, arrays, and primitive inputs", async () => {
+  const { normalizeUpdateBookPayload } = await import("../src/lib/server/content/book-payloads.ts");
+
+  assert.equal(normalizeUpdateBookPayload(null as never), null);
+  assert.equal(normalizeUpdateBookPayload([] as never), null);
+  assert.equal(normalizeUpdateBookPayload("book" as never), null);
+  assert.equal(normalizeUpdateBookPayload(42 as never), null);
+  assert.equal(normalizeUpdateBookPayload(true as never), null);
 });

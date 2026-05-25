@@ -1,12 +1,21 @@
 import type { CreateBookPayload, UpdateBookPayload } from "@/types";
 
+/** Narrow unknown JSON values to plain object-like payloads. */
+function isPayloadObject(data: unknown): data is Record<string, unknown> {
+  return typeof data === "object" && data !== null && !Array.isArray(data);
+}
+
 /** Check whether a payload property was explicitly provided. */
-function hasOwnKey(data: object, key: string) {
+function hasOwnKey(data: Record<string, unknown>, key: string) {
   return Object.prototype.hasOwnProperty.call(data, key);
 }
 
 /** Normalize a create-book payload into the server-safe shape. */
-export function normalizeCreateBookPayload(data: Partial<CreateBookPayload>): CreateBookPayload | null {
+export function normalizeCreateBookPayload(data: unknown): CreateBookPayload | null {
+  if (!isPayloadObject(data)) {
+    return null;
+  }
+
   const title = typeof data.title === "string" ? data.title.trim() : "";
   const coverUrl = typeof data.coverUrl === "string" ? data.coverUrl.trim() : "";
   const pdfUrl = typeof data.pdfUrl === "string" ? data.pdfUrl.trim() : "";
@@ -25,7 +34,11 @@ export function normalizeCreateBookPayload(data: Partial<CreateBookPayload>): Cr
 }
 
 /** Normalize an update-book payload and reject invalid partial updates. */
-export function normalizeUpdateBookPayload(data: Partial<UpdateBookPayload>): UpdateBookPayload | null {
+export function normalizeUpdateBookPayload(data: unknown): UpdateBookPayload | null {
+  if (!isPayloadObject(data)) {
+    return null;
+  }
+
   const payload: UpdateBookPayload = {};
 
   if (hasOwnKey(data, "title")) {

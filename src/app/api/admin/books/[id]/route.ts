@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import type { UpdateBookPayload } from "@/types";
 import { createAdminUnauthorizedResponse, getSessionFromRequest } from "@/lib/server/auth/cookie";
 import { normalizeUpdateBookPayload } from "@/lib/server/content/book-payloads";
 import { createContentApiErrorResponse } from "@/lib/server/content/api-error";
@@ -16,12 +15,6 @@ function ensureAdminSession(request: NextRequest) {
   return null;
 }
 
-/** Parse and normalize the admin update-book request body. */
-async function parseUpdateBookPayload(request: NextRequest) {
-  const data = (await request.json()) as Partial<UpdateBookPayload>;
-  return normalizeUpdateBookPayload(data);
-}
-
 /** Update a single admin-managed book record. */
 export async function PATCH(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const unauthorized = ensureAdminSession(request);
@@ -30,7 +23,14 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
   }
 
   const { id } = await context.params;
-  const payload = await parseUpdateBookPayload(request);
+  let payload: ReturnType<typeof normalizeUpdateBookPayload> = null;
+
+  try {
+    payload = normalizeUpdateBookPayload(await request.json());
+  } catch {
+    return NextResponse.json({ message: "Invalid book payload" }, { status: 400 });
+  }
+
   if (!payload) {
     return NextResponse.json({ message: "Invalid book payload" }, { status: 400 });
   }
