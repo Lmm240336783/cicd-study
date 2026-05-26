@@ -1,5 +1,7 @@
 import "server-only";
 import type {
+  BookCollectionItem,
+  CreateBookPayload,
   CreateImageTagPayload,
   CreateImagePayload,
   CreateShowPayload,
@@ -8,6 +10,7 @@ import type {
   MusicCollectionItem,
   SingerCollectionItem,
   ShowCollectionItem,
+  UpdateBookPayload,
   UpdateImageTagPayload,
   UpdateImagePayload,
   UpdateShowPayload,
@@ -15,6 +18,9 @@ import type {
 import { createSupabaseAdminClient } from "@/lib/server/supabase/admin";
 import { fallbackImages, fallbackMusic, fallbackShows, fallbackSingers } from "@/lib/server/content/fallback";
 import {
+  bookPayloadToInsertRecord,
+  bookPayloadToUpdateRecord,
+  bookRecordToItem,
   imageTagPayloadToInsertRecord,
   imageTagPayloadToUpdateRecord,
   imageTagRecordToItem,
@@ -28,7 +34,7 @@ import {
   showPayloadToUpdateRecord,
   showRecordToItem,
 } from "@/lib/server/content/records";
-import type { ImageRecord, ImageTagRecord, MusicRecord, SingerRecord, ShowRecord } from "@/lib/server/content/records";
+import type { BookRecord, ImageRecord, ImageTagRecord, MusicRecord, SingerRecord, ShowRecord } from "@/lib/server/content/records";
 
 /** 统一获取内容读写用的 Supabase admin client。*/
 function getContentClient() {
@@ -60,7 +66,41 @@ function buildFallbackImageTags(): ImageTagItem[] {
   }));
 }
 
-/** 查询前台公开图片列表。*/
+/** 查询前台公开图书列表。*/
+export async function listPublicBooks(): Promise<BookCollectionItem[]> {
+  const { data, error } = await getContentClient()
+    .from("books")
+    .select("*")
+    .eq("status", "published")
+    .order("updated_at", { ascending: false });
+
+  assertNoSupabaseError(error, "读取公开图书列表");
+  return ((data ?? []) as BookRecord[]).map(bookRecordToItem);
+}
+
+/** 查询前台公开图书详情。*/
+export async function getPublicBookById(id: string): Promise<BookCollectionItem | null> {
+  const { data, error } = await getContentClient()
+    .from("books")
+    .select("*")
+    .eq("id", id)
+    .eq("status", "published")
+    .maybeSingle();
+
+  assertNoSupabaseError(error, "读取图书详情");
+  return data ? bookRecordToItem(data as BookRecord) : null;
+}
+
+/** List the admin-visible books from the books table. */
+export async function listAdminBooks(): Promise<BookCollectionItem[]> {
+  const { data, error } = await getContentClient().from("books").select("*").order("updated_at", {
+    ascending: false,
+  });
+
+  assertNoSupabaseError(error, "读取后台图书列表");
+  return ((data ?? []) as BookRecord[]).map(bookRecordToItem);
+}
+
 export async function listPublicImages(): Promise<ImageCollectionItem[]> {
   const { data, error } = await getContentClient()
     .from("images")
@@ -345,6 +385,39 @@ export async function listFeaturedSingers(limit = 4): Promise<SingerCollectionIt
 }
 
 /** 新增一条图片记录。*/
+/** Create a single admin-managed book record. */
+export async function createBook(payload: CreateBookPayload): Promise<BookCollectionItem> {
+  const { data, error } = await getContentClient()
+    .from("books")
+    .insert(bookPayloadToInsertRecord(payload))
+    .select("*")
+    .single();
+
+  assertNoSupabaseError(error, "创建图书");
+  return bookRecordToItem(data as BookRecord);
+}
+
+/** Update a single admin-managed book record. */
+export async function updateBookById(id: string, payload: UpdateBookPayload): Promise<BookCollectionItem | null> {
+  const { data, error } = await getContentClient()
+    .from("books")
+    .update(bookPayloadToUpdateRecord(payload))
+    .eq("id", id)
+    .select("*")
+    .maybeSingle();
+
+  assertNoSupabaseError(error, "更新图书");
+  return data ? bookRecordToItem(data as BookRecord) : null;
+}
+
+/** Delete a single admin-managed book record. */
+export async function deleteBookById(id: string) {
+  const { data, error } = await getContentClient().from("books").delete().eq("id", id).select("id").maybeSingle();
+
+  assertNoSupabaseError(error, "删除图书");
+  return Boolean(data);
+}
+
 export async function createImage(payload: CreateImagePayload): Promise<ImageCollectionItem> {
   const { data, error } = await getContentClient()
     .from("images")

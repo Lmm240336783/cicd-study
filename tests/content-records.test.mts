@@ -2,6 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { createContentApiErrorResponse } from "../src/lib/server/content/api-error.ts";
 import {
+  bookPayloadToInsertRecord,
+  bookPayloadToUpdateRecord,
+  bookRecordToItem,
   imageTagPayloadToInsertRecord,
   imageTagPayloadToUpdateRecord,
   imageTagRecordToItem,
@@ -59,6 +62,96 @@ test("maps image create payloads to Supabase insert records", () => {
       image_url: "https://example.com/sunset.jpg",
       tags: ["旅行", "自然"],
       is_featured: true,
+      status: "published",
+    },
+  );
+});
+
+test("maps Supabase book records to public book items", () => {
+  assert.deepEqual(
+    bookRecordToItem({
+      id: "book-1",
+      title: "深夜书店",
+      cover_url: "https://example.com/book-cover.jpg",
+      description: null,
+      pdf_url: "https://example.com/book.pdf",
+      status: null,
+      created_at: "2026-05-08T00:00:00.000Z",
+      updated_at: "2026-05-09T00:00:00.000Z",
+    }),
+    {
+      id: "book-1",
+      title: "深夜书店",
+      coverUrl: "https://example.com/book-cover.jpg",
+      description: "",
+      pdfUrl: "https://example.com/book.pdf",
+      status: "draft",
+      createdAt: "2026-05-08T00:00:00.000Z",
+      updatedAt: "2026-05-09T00:00:00.000Z",
+    },
+  );
+});
+
+test("maps book create payloads to Supabase insert records", () => {
+  assert.deepEqual(
+    bookPayloadToInsertRecord({
+      title: "深夜书店",
+      coverUrl: "https://example.com/book-cover.jpg",
+      pdfUrl: "https://example.com/book.pdf",
+    }),
+    {
+      title: "深夜书店",
+      cover_url: "https://example.com/book-cover.jpg",
+      description: "",
+      pdf_url: "https://example.com/book.pdf",
+      status: "draft",
+    },
+  );
+
+  assert.deepEqual(
+    bookPayloadToInsertRecord({
+      title: "纸上城",
+      coverUrl: "https://example.com/book-city-cover.jpg",
+      description: "城市与记忆的短篇集",
+      pdfUrl: "https://example.com/book-city.pdf",
+      status: "published",
+    }),
+    {
+      title: "纸上城",
+      cover_url: "https://example.com/book-city-cover.jpg",
+      description: "城市与记忆的短篇集",
+      pdf_url: "https://example.com/book-city.pdf",
+      status: "published",
+    },
+  );
+});
+
+test("maps book update payloads to compact Supabase update records", () => {
+  assert.deepEqual(
+    bookPayloadToUpdateRecord({
+      title: "深夜书店",
+      coverUrl: undefined,
+      description: "",
+      pdfUrl: undefined,
+      status: undefined,
+    }),
+    {
+      title: "深夜书店",
+      description: "",
+    },
+  );
+
+  assert.deepEqual(
+    bookPayloadToUpdateRecord({
+      coverUrl: "https://example.com/book-city-cover.jpg",
+      description: "补充了修订版前言",
+      pdfUrl: "https://example.com/book-city-revised.pdf",
+      status: "published",
+    }),
+    {
+      cover_url: "https://example.com/book-city-cover.jpg",
+      description: "补充了修订版前言",
+      pdf_url: "https://example.com/book-city-revised.pdf",
       status: "published",
     },
   );

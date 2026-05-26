@@ -52,6 +52,8 @@
 ### 前台页面 `src/app/(site)`
 
 - `/`：首页，展示精选图片、精选电视剧和推荐歌手小块，入口文件是 `src/app/(site)/page.tsx`。
+- `/books`：公开图书列表页，入口文件是 `src/app/(site)/books/page.tsx`。
+- `/books/[id]`：公开图书详情页，入口文件是 `src/app/(site)/books/[id]/page.tsx`。
 - `/images`：公开图片列表页，入口文件是 `src/app/(site)/images/page.tsx`。
 - `/images/[id]`：公开图片详情页，入口文件是 `src/app/(site)/images/[id]/page.tsx`。
 - `/shows`：公开电视剧列表页，入口文件是 `src/app/(site)/shows/page.tsx`。
@@ -64,6 +66,7 @@
 ### 后台页面 `src/app/(admin)`
 
 - `/admin`：后台仪表盘，页面组件是 `AdminDashboard`，入口文件是 `src/app/(admin)/admin/page.tsx`。
+- `/admin/books`：图书管理页，页面组件是 `BookManager`，负责图书列表、新增、编辑、删除、封面上传、PDF 上传和发布状态维护。
 - `/admin/images`：图片管理页，页面组件是 `ImageManager`，负责图片列表、新增、编辑、删除、上传、推荐和上下架。
 - `/admin/shows`：电视剧管理页，页面组件是 `ShowManager`，负责电视剧列表、新增、编辑、删除、导入、推荐和上下架。
 - `src/app/(admin)/layout.tsx`：后台统一壳，挂载 `AdminShell`。
@@ -83,6 +86,8 @@
 ### 公开内容接口 `src/app/api/public`
 
 - `GET /api/public/home`：返回首页精选内容，包含精选图片、精选电视剧和推荐歌手。
+- `GET /api/public/books`：返回公开图书列表，只包含已发布图书。
+- `GET /api/public/books/[id]`：返回公开图书详情，只包含已发布图书。
 - `GET /api/public/images`：返回公开图片列表，只包含已发布图片。
 - `GET /api/public/shows`：返回公开电视剧列表，只包含已发布电视剧。
 - `GET /api/public/music`：返回公开音乐列表，只包含已发布音乐。
@@ -92,6 +97,11 @@
 ### 后台管理接口 `src/app/api/admin`
 
 - `GET /api/admin/dashboard`：返回后台仪表盘统计数据。
+- `GET /api/admin/books`：返回后台图书全量列表。
+- `POST /api/admin/books`：创建图书记录。
+- `PATCH /api/admin/books/[id]`：更新指定图书。
+- `DELETE /api/admin/books/[id]`：删除指定图书。
+- `POST /api/admin/books/upload-pdf`：上传图书 PDF 并返回公开 URL。
 - `GET /api/admin/images`：返回后台图片全量列表。
 - `POST /api/admin/images`：创建图片记录。
 - `PATCH /api/admin/images/[id]`：更新指定图片。
@@ -109,8 +119,10 @@
 
 ## 关键对应关系
 
+- 后台页面 `/admin/books` 对应的主要接口是 `/api/admin/books`、`/api/admin/books/[id]`、`/api/admin/books/upload-pdf`，封面上传复用 `/api/admin/images/upload`。
 - 后台页面 `/admin/images` 对应的主要接口是 `/api/admin/images`、`/api/admin/images/[id]`、`/api/admin/images/upload`、`/api/admin/image-tags*`。
 - 后台页面 `/admin/shows` 对应的主要接口是 `/api/admin/shows`、`/api/admin/shows/[id]`、`/api/admin/shows/import`。
+- 前台图书页 `/books` 和 `/books/[id]` 直接依赖服务端图书读取能力与 `/api/public/books*`。
 - 前台首页 `/` 主要依赖 `/api/public/home`，也会直接使用服务端内容读取能力。
 - 前台音乐页 `/music` 和歌手详情页 `/music/singers/[id]` 直接依赖服务端音乐与歌手读取能力。
 - 内容数据最终统一收口在 `src/lib/server/content/store.ts`。

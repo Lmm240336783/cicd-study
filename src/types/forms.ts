@@ -1,3 +1,5 @@
+import type { ContentStatus } from "./content";
+
 export type LoginFormValues = {
   email: string;
   password: string;
@@ -6,6 +8,16 @@ export type LoginFormValues = {
 export type RegisterFormValues = LoginFormValues & {
   name: string;
 };
+
+export type CreateBookPayload = {
+  title: string;
+  coverUrl: string;
+  description?: string;
+  pdfUrl: string;
+  status?: ContentStatus;
+};
+
+export type UpdateBookPayload = Partial<CreateBookPayload>;
 
 export type CreateImagePayload = {
   title: string;

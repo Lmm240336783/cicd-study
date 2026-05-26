@@ -1,5 +1,16 @@
 create extension if not exists pgcrypto;
 
+create table if not exists public.books (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  cover_url text not null,
+  description text not null default '',
+  pdf_url text not null,
+  status text not null default 'draft' check (status in ('draft', 'published')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create table if not exists public.images (
   id uuid primary key default gen_random_uuid(),
   title text not null,
@@ -45,6 +56,12 @@ begin
 end;
 $$;
 
+drop trigger if exists books_set_updated_at on public.books;
+create trigger books_set_updated_at
+  before update on public.books
+  for each row
+  execute function public.set_updated_at();
+
 drop trigger if exists images_set_updated_at on public.images;
 create trigger images_set_updated_at
   before update on public.images
@@ -63,6 +80,7 @@ create trigger shows_set_updated_at
   for each row
   execute function public.set_updated_at();
 
+create index if not exists books_status_updated_at_idx on public.books (status, updated_at desc);
 create index if not exists images_status_updated_at_idx on public.images (status, updated_at desc);
 create index if not exists images_featured_updated_at_idx on public.images (is_featured, updated_at desc);
 create index if not exists image_tags_updated_at_idx on public.image_tags (updated_at desc);
