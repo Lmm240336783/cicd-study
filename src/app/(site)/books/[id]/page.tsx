@@ -51,15 +51,15 @@ export default async function PublicBookDetailPage({ params }: PublicBookDetailP
             style={bookCoverStyle(book)}
           >
             <div className="absolute left-4 top-4 rounded-full bg-white/88 px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-[#7b4edb] shadow-[0_10px_24px_rgba(115,82,219,0.16)] backdrop-blur">
-              Reading Shelf
+              馆藏精选
             </div>
           </div>
 
           <aside className={cn(styles.detailInfoPanel, "rounded-[26px] p-5 md:p-7")}>
-            <p className="text-sm font-black uppercase tracking-[0.22em] text-[#ff5eb8]">Public Book Pick</p>
+            <p className="text-sm font-black uppercase tracking-[0.22em] text-[#ff5eb8]">公开书单</p>
             <h1 className="mt-3 text-[2.5rem] font-black leading-[1.04] text-slate-950 md:text-[4rem]">{book.title}</h1>
             <p className="mt-5 text-base leading-8 text-slate-700 md:text-lg">
-              {book.description || "这本书已经放进公开书单，可以直接在当前页面预览 PDF。"}
+              {book.description || "这本书已加入公开书单，你可以直接在当前页面预览完整 PDF。"}
             </p>
 
             <div className="mt-7 flex flex-wrap gap-2">
@@ -92,7 +92,7 @@ export default async function PublicBookDetailPage({ params }: PublicBookDetailP
             <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 className="text-xl font-black text-slate-950">在线预览</h2>
-                <p className="mt-1 text-sm text-slate-600">如果预览没有显示，请直接使用下方入口在新窗口打开 PDF。</p>
+                <p className="mt-1 text-sm text-slate-600">如果当前浏览器没有显示预览内容，可以直接用右侧按钮在新窗口打开 PDF。</p>
               </div>
               <a
                 href={book.pdfUrl}

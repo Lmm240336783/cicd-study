@@ -89,8 +89,19 @@ test("renders the admin book manager shell with pdf upload affordances", () => {
   const source = readFileSync("src/components/admin/BookManager.tsx", "utf8");
 
   assert.match(source, /图书管理/);
+  assert.match(source, /ApiTable/);
+  assert.match(source, /RefModal/);
+  assert.match(source, /api="\/api\/admin\/books"/);
   assert.match(source, /上传 PDF/);
+  assert.match(source, /\/api\/admin\/images\/upload/);
   assert.match(source, /\/api\/admin\/books\/upload-pdf/);
+  assert.match(source, /createBook/);
+  assert.match(source, /updateBook/);
+  assert.match(source, /deleteBook/);
+  assert.match(source, /uploadCoverFile/);
+  assert.match(source, /uploadPdfFile/);
+  assert.match(source, /modalRef\.current\?\.open\("新增图书"/);
+  assert.match(source, /mode === "edit"/);
   assert.match(source, /当前 PDF/);
   assert.match(source, /const bookStatusOptions = \[/);
   assert.match(source, /\{ value: "draft", label: "草稿" \}/);
@@ -106,5 +117,7 @@ test("renders the admin book manager shell with pdf upload affordances", () => {
   assert.match(source, /\{normalizedPdfUrl\}/);
   assert.match(source, /保存后在这里查看当前 PDF/);
   assert.doesNotMatch(source, /href=\{currentPdfUrl \|\| "#"\}/);
-  assert.match(source, /<Button[\s\S]*disabled[\s\S]*等待后端\/API 接入/);
+  assert.match(source, /confirmLoading=\{saving\}/);
+  assert.match(source, /tableRef\.current\?\.reload\(\)/);
+  assert.doesNotMatch(source, /等待后端\/API 接入/);
 });

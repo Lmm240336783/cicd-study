@@ -51,7 +51,11 @@ test("public book detail page embeds the PDF preview", () => {
   assert.match(source, /getPublicBookById/);
   assert.match(source, /notFound\(\)/);
   assert.match(source, /href="\/books"/);
+  assert.match(source, /馆藏精选/);
+  assert.match(source, /公开书单/);
   assert.match(source, /<iframe/);
   assert.match(source, /src=\{book\.pdfUrl\}/);
   assert.match(source, /新窗口打开 PDF/);
+  assert.doesNotMatch(source, /Reading Shelf/);
+  assert.doesNotMatch(source, /Public Book Pick/);
 });
