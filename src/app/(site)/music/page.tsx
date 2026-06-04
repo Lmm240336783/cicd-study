@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { connection } from "next/server";
+import { CollectionEmptyState } from "@/components/site/CollectionEmptyState";
 import { listFeaturedSingers, listPublicMusic, listPublicSingers } from "@/lib/server/content/store";
 import styles from "@/components/site/site-visuals.module.scss";
 import { cn } from "@/lib/utils/cn";
@@ -100,119 +101,132 @@ export default async function MusicPage() {
   const [music, singers, featuredSingers] = await Promise.all([listPublicMusic(), listPublicSingers(), listFeaturedSingers(4)]);
   const singerMap = new Map(singers.map((item) => [item.id, item]));
   const spotlightSong = music[0];
+  const isMusicEmpty = music.length === 0 && featuredSingers.length === 0;
 
   return (
     <div className="mx-auto w-full max-w-[92rem] px-4 pb-12 pt-6 md:px-6 md:pb-16">
       <section className={cn(styles.surfacePanel, "overflow-hidden rounded-[30px] p-3 md:p-4")}>
-        <header className={cn(styles.listHeader, "rounded-[22px] px-5 py-4")}>
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h1 className="text-3xl font-black text-slate-900">音乐</h1>
-              <p className="mt-1 text-sm text-[#5b5681]">按歌手进入详情，查看他们的歌曲列表。</p>
-            </div>
-            <div className={cn(styles.countPill, "px-4 py-2 text-xs")}>收录歌曲 {music.length} 首</div>
-          </div>
-        </header>
-
-        <div className="mt-3 grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
-          <article className={cn(styles.musicDetailShell, "overflow-hidden rounded-[24px] p-5 text-white md:p-6")}>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-white/72">
-                Spotlight
-              </span>
-              <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/72">Singer first</span>
-            </div>
-
-            {spotlightSong ? (
-              <div className="mt-5 grid gap-5 lg:grid-cols-[220px_minmax(0,1fr)]">
-                <Link href={`/music/${spotlightSong.id}`} className="block overflow-hidden rounded-[22px] border border-white/12">
-                  <div className="h-[280px] bg-cover bg-center bg-no-repeat" style={coverStyle(spotlightSong, 0)} />
-                </Link>
-
-                <div className="flex flex-col justify-between">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/54">Featured Track</p>
-                    <h2 className="mt-3 text-3xl font-black leading-tight md:text-4xl">{spotlightSong.title}</h2>
-                    <p className="mt-3 text-sm leading-7 text-white/72">
-                      {spotlightSong.description || "挑一首喜欢的歌，再点进歌手页继续听。"}
-                    </p>
-                  </div>
-
-                  <div className="mt-5 flex flex-wrap items-center gap-2">
-                    <span className="rounded-full bg-white/10 px-3 py-2 text-sm font-semibold text-white/82">
-                      {spotlightSong.album || "单曲"}
-                    </span>
-                    <span className="rounded-full bg-white/10 px-3 py-2 text-sm font-semibold text-white/82">
-                      {spotlightSong.genre || "音乐"}
-                    </span>
-                    <span className="rounded-full bg-white/10 px-3 py-2 text-sm font-semibold text-white/82">
-                      {spotlightSong.duration || "0:00"}
-                    </span>
-                  </div>
-
-                  {singerMap.get(spotlightSong.singerId) ? (
-                    <Link
-                      href={`/music/singers/${spotlightSong.singerId}`}
-                      className="mt-5 inline-flex w-fit rounded-full bg-white px-5 py-2.5 text-sm font-bold text-slate-950 transition hover:brightness-95"
-                    >
-                      去看歌手详情 →
-                    </Link>
-                  ) : null}
+        {isMusicEmpty ? (
+          <CollectionEmptyState
+            eyebrow="公开歌单"
+            title="公开歌单正在补货中"
+            description="音乐区暂时还没有公开歌曲和推荐歌手，稍后再来看看新的收听清单。"
+          />
+        ) : (
+          <>
+            <header className={cn(styles.listHeader, "rounded-[22px] px-5 py-4")}>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h1 className="text-3xl font-black text-slate-900">音乐</h1>
+                  <p className="mt-1 text-sm text-[#5b5681]">按歌手进入详情，查看他们的歌曲列表。</p>
                 </div>
+                <div className={cn(styles.countPill, "px-4 py-2 text-xs")}>收录歌曲 {music.length} 首</div>
               </div>
-            ) : (
-              <div className="mt-5 rounded-[22px] border border-white/10 bg-white/6 p-6 text-sm text-white/72">
-                暂时还没有音乐内容。
-              </div>
-            )}
-          </article>
+            </header>
 
-          <aside className={cn(styles.musicSurface, "rounded-[24px] p-4 md:p-5")}>
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <div>
-                <h2 className="text-lg font-black text-slate-950">推荐歌手</h2>
-                <p className="mt-1 text-xs text-slate-500">点开直接进入歌手歌单</p>
-              </div>
-              <Link href="#music-grid" className={cn(styles.musicMoreButton, "inline-flex items-center rounded-[18px] px-[16px] py-[9px] text-sm font-bold transition hover:brightness-105")}>
-                歌曲列表 →
-              </Link>
-            </div>
+            <div className="mt-3 grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
+              <article className={cn(styles.musicDetailShell, "overflow-hidden rounded-[24px] p-5 text-white md:p-6")}>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-white/72">
+                    Spotlight
+                  </span>
+                  <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/72">Singer first</span>
+                </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-2">
-              {featuredSingers.map((item, index) => (
-                <SingerCard key={item.id} item={item} index={index} />
-              ))}
+                {spotlightSong ? (
+                  <div className="mt-5 grid gap-5 lg:grid-cols-[220px_minmax(0,1fr)]">
+                    <Link href={`/music/${spotlightSong.id}`} className="block overflow-hidden rounded-[22px] border border-white/12">
+                      <div className="h-[280px] bg-cover bg-center bg-no-repeat" style={coverStyle(spotlightSong, 0)} />
+                    </Link>
+
+                    <div className="flex flex-col justify-between">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/54">Featured Track</p>
+                        <h2 className="mt-3 text-3xl font-black leading-tight md:text-4xl">{spotlightSong.title}</h2>
+                        <p className="mt-3 text-sm leading-7 text-white/72">
+                          {spotlightSong.description || "挑一首喜欢的歌，再点进歌手页继续听。"}
+                        </p>
+                      </div>
+
+                      <div className="mt-5 flex flex-wrap items-center gap-2">
+                        <span className="rounded-full bg-white/10 px-3 py-2 text-sm font-semibold text-white/82">
+                          {spotlightSong.album || "单曲"}
+                        </span>
+                        <span className="rounded-full bg-white/10 px-3 py-2 text-sm font-semibold text-white/82">
+                          {spotlightSong.genre || "音乐"}
+                        </span>
+                        <span className="rounded-full bg-white/10 px-3 py-2 text-sm font-semibold text-white/82">
+                          {spotlightSong.duration || "0:00"}
+                        </span>
+                      </div>
+
+                      {singerMap.get(spotlightSong.singerId) ? (
+                        <Link
+                          href={`/music/singers/${spotlightSong.singerId}`}
+                          className="mt-5 inline-flex w-fit rounded-full bg-white px-5 py-2.5 text-sm font-bold text-slate-950 transition hover:brightness-95"
+                        >
+                          去看歌手详情 →
+                        </Link>
+                      ) : null}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-5 rounded-[22px] border border-white/10 bg-white/6 p-6 text-sm text-white/72">
+                    暂时还没有音乐内容。
+                  </div>
+                )}
+              </article>
+
+              <aside className={cn(styles.musicSurface, "rounded-[24px] p-4 md:p-5")}>
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-lg font-black text-slate-950">推荐歌手</h2>
+                    <p className="mt-1 text-xs text-slate-500">点开直接进入歌手歌单</p>
+                  </div>
+                  <Link href="#music-grid" className={cn(styles.musicMoreButton, "inline-flex items-center rounded-[18px] px-[16px] py-[9px] text-sm font-bold transition hover:brightness-105")}>
+                    歌曲列表 →
+                  </Link>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-2">
+                  {featuredSingers.map((item, index) => (
+                    <SingerCard key={item.id} item={item} index={index} />
+                  ))}
+                </div>
+              </aside>
             </div>
-          </aside>
-        </div>
+          </>
+        )}
       </section>
 
-      <section id="music-grid" className={cn(styles.musicSurface, "mt-6 rounded-[28px] p-4 md:p-5")}>
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-black text-slate-950">歌曲列表</h2>
-            <p className="mt-1 text-xs text-slate-500">每一首歌都能顺着歌手页继续听下去</p>
+      {isMusicEmpty ? null : (
+        <section id="music-grid" className={cn(styles.musicSurface, "mt-6 rounded-[28px] p-4 md:p-5")}>
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-black text-slate-950">歌曲列表</h2>
+              <p className="mt-1 text-xs text-slate-500">每一首歌都能顺着歌手页继续听下去</p>
+            </div>
+            <div className={cn(styles.mutedChip, "px-3 py-1 text-xs")}>按更新时间排序</div>
           </div>
-          <div className={cn(styles.mutedChip, "px-3 py-1 text-xs")}>按更新时间排序</div>
-        </div>
 
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {music.map((item, index) => {
-            const singer = singerMap.get(item.singerId);
-            const singerHref = singer ? `/music/singers/${singer.id}` : "/music";
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {music.map((item, index) => {
+              const singer = singerMap.get(item.singerId);
+              const singerHref = singer ? `/music/singers/${singer.id}` : "/music";
 
-            return (
-              <MusicCard
-                key={item.id}
-                item={item}
-                singerName={singer?.name ?? "未知歌手"}
-                singerHref={singerHref}
-                index={index}
-              />
-            );
-          })}
-        </div>
-      </section>
+              return (
+                <MusicCard
+                  key={item.id}
+                  item={item}
+                  singerName={singer?.name ?? "未知歌手"}
+                  singerHref={singerHref}
+                  index={index}
+                />
+              );
+            })}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

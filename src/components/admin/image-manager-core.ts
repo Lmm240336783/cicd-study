@@ -31,25 +31,14 @@ function normalizeTags(tags: string[]) {
 }
 
 /** 为新增或编辑弹框生成默认表单值。 */
-export function buildImageFormValues(image?: ImageManagerRow | null): ImageManagerFormValues {
-  if (!image) {
-    return {
-      title: "",
-      description: "",
-      imageUrl: "",
-      tags: [],
-      isFeatured: false,
-      status: "draft",
-    };
-  }
-
+export function buildImageFormValues(image?: Partial<ImageManagerRow> | null): ImageManagerFormValues {
   return {
-    title: image.title,
-    description: image.description,
-    imageUrl: image.imageUrl,
-    tags: [...image.tags],
-    isFeatured: image.isFeatured,
-    status: image.status,
+    title: image?.title ?? "",
+    description: image?.description ?? "",
+    imageUrl: image?.imageUrl ?? "",
+    tags: [...(image?.tags ?? [])],
+    isFeatured: image?.isFeatured ?? false,
+    status: image?.status ?? "draft",
   };
 }
 

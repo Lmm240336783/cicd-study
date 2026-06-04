@@ -36,9 +36,11 @@
 ### `src/lib/server/content`
 
 - `store.ts`
-  负责图片和电视剧的增删改查，是内容表的主要数据访问层。
+  负责图片、图片合集和电视剧的增删改查，是内容表的主要数据访问层。
 - `records.ts`
   负责数据库字段和前端字段之间的转换。
+- `image-album-payloads.ts`
+  负责后台图片合集创建、更新请求体的基础校验和字段归一化。
 - `fallback.ts`
   负责内容表不可用时的兜底 mock 数据。
 
@@ -47,9 +49,9 @@
 - `api/auth/*`
   负责登录、注册、找回密码、验证码重置密码、退出登录、读取当前 session。
 - `api/public/*`
-  负责前台公开数据接口，例如首页精选、公开图片列表、公开电视剧列表。
+  负责前台公开数据接口，例如首页精选、公开图片列表、公开图片详情、公开图片合集列表、公开电视剧列表。
 - `api/admin/*`
-  负责后台数据管理接口和图片上传接口，例如后台图片列表、新建图片、后台电视剧列表、新建电视剧。
+  负责后台数据管理接口和图片上传接口，例如后台图片列表、新建图片、图片合集管理、后台电视剧列表、新建电视剧。
 
 ## Next.js 后端常见写法
 
@@ -109,6 +111,8 @@ createClient(supabaseUrl, supabaseKey, options)
 supabase.from("images").select("*")
 supabase.from("images").select("*").eq("id", id).maybeSingle()
 supabase.from("images").select("*").order("updated_at", { ascending: false })
+supabase.from("image_albums").select("*").eq("status", "published")
+supabase.from("image_album_images").select("album_id, image_id, sort_order, images(*)")
 ```
 
 - `from("table")`
@@ -132,6 +136,8 @@ supabase.from("images").select("*").order("updated_at", { ascending: false })
 supabase.from("images").insert(payload).select("*").single()
 supabase.from("images").update(payload).eq("id", id).select("*").maybeSingle()
 supabase.from("images").delete().eq("id", id)
+supabase.from("image_albums").insert(payload).select("*").single()
+supabase.from("image_album_images").insert(records)
 ```
 
 - `insert(payload)`
@@ -240,18 +246,26 @@ supabase.storage.from(bucketName).getPublicUrl(path)
 
 ### 公开列表流程
 
-1. 前端请求 `/api/public/home`、`/api/public/images` 或 `/api/public/shows`
+1. 前端请求 `/api/public/home`、`/api/public/images`、`/api/public/images/[id]`、`/api/public/image-albums`、`/api/public/image-albums/[id]` 或 `/api/public/shows`
 2. Route Handler 调用 `content/store.ts`
-3. `store.ts` 只返回已发布或已精选的数据
+3. `store.ts` 只返回已发布或已精选的数据；图片合集封面由第一张有序公开图片推导
 4. 接口把结果包装成 `{ data: ... }` 返回给前端
 
 ### 后台列表与创建流程
 
-1. 前端请求 `/api/admin/images` 或 `/api/admin/shows`
+1. 前端请求 `/api/admin/images`、`/api/admin/image-albums` 或 `/api/admin/shows`
 2. Route Handler 先校验后台 Cookie 会话
 3. `GET` 走后台列表查询，返回所有可管理内容
-4. `POST` 先读取并校验 JSON 请求体，再调用 `createImage()` / `createShow()` 写库
+4. `POST` 先读取并校验 JSON 请求体，再调用 `createImage()` / `createImageAlbum()` / `createShow()` 写库
 5. 创建成功后返回 `201`
+
+### 图片合集流程
+
+1. 后台页面 `/admin/images/albums` 读取 `/api/admin/image-albums` 展示合集，同时复用 `/api/admin/images` 作为图片选择数据。
+2. 新建合集调用 `POST /api/admin/image-albums`，写入 `image_albums` 后把有序图片 id 写入 `image_album_images`。
+3. 修改合集调用 `PATCH /api/admin/image-albums/[id]`，更新标题、描述、发布状态，并在传入 `imageIds` 时覆盖关联表顺序。
+4. 前台 `/images/albums` 先展示客户端页面壳，再请求 `/api/public/image-albums`。
+5. 前台 `/images/albums/[id]` 先展示客户端详情壳，再请求 `/api/public/image-albums/[id]`，图片切换只发生在浏览器状态中。
 
 ### 图片上传流程
 
@@ -265,7 +279,7 @@ supabase.storage.from(bucketName).getPublicUrl(path)
 
 1. Route Handler 校验会话或参数
 2. 调用 `content/store.ts`
-3. `store.ts` 用 Supabase 表语法操作 `images` / `shows`
+3. `store.ts` 用 Supabase 表语法操作 `images` / `image_albums` / `image_album_images` / `shows`
 4. 再把数据库记录转换成前端需要的字段结构返回
 
 ## 维护约定

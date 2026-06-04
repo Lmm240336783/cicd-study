@@ -5,6 +5,7 @@ import { Button, Form, Input, Popconfirm, Select, Space, Tag, Upload } from "ant
 import type { TableColumnsType, UploadFile } from "antd";
 import { ApiTable, RefModal, toast } from "@/components/shared";
 import type { ApiTableRef, RefModalRef } from "@/components/shared";
+import { uploadBookPdfWithMultipart } from "@/lib/client/tos/book-pdf-multipart-upload";
 import type { BookCollectionItem, CreateBookPayload, UpdateBookPayload } from "@/types";
 import { buildBookFormValues, buildCreateBookPayload, buildUpdateBookPayload } from "./book-manager-core";
 import type { BookManagerFormValues } from "./book-manager-core";
@@ -28,7 +29,7 @@ type BookMutationResponse = {
   message?: string;
 };
 
-type UploadResponse = {
+type CoverUploadResponse = {
   data?: {
     path: string;
     url: string;
@@ -49,7 +50,15 @@ type BookEditorFormRef = {
 
 /** 判断弹框参数是否包含完整图书记录。 */
 function isBookCollectionItem(data: BookModalData): data is BookCollectionItem {
-  return Boolean(data.id && data.title && typeof data.coverUrl === "string" && typeof data.pdfUrl === "string");
+  return Boolean(
+    data.id &&
+    data.title &&
+    typeof data.coverUrl === "string" &&
+    typeof data.pdfUrl === "string" &&
+    typeof data.pdfObjectKey === "string" &&
+    typeof data.pdfFileName === "string" &&
+    typeof data.pdfSizeBytes === "number",
+  );
 }
 
 /** 根据图书表单值生成封面上传列表。 */
@@ -70,14 +79,14 @@ function buildCoverUploadFileList(values: BookManagerFormValues): UploadFile[] {
 
 /** 根据图书表单值生成 PDF 上传列表。 */
 function buildPdfUploadFileList(values: BookManagerFormValues): UploadFile[] {
-  if (!values.pdfUrl) {
+  if (!values.pdfUrl && !values.pdfFileName) {
     return [];
   }
 
   return [
     {
       uid: "current-book-pdf",
-      name: values.title ? `${values.title}.pdf` : "当前 PDF",
+      name: values.pdfFileName || (values.title ? `${values.title}.pdf` : "当前 PDF"),
       status: "done",
       url: values.pdfUrl,
     },
@@ -89,7 +98,7 @@ async function uploadCoverFile(file: File) {
   const formData = new FormData();
   formData.append("file", file);
 
-  const result = await requestJson<UploadResponse>(
+  const result = await requestJson<CoverUploadResponse>(
     "/api/admin/images/upload",
     {
       method: "POST",
@@ -100,27 +109,6 @@ async function uploadCoverFile(file: File) {
 
   if (!result.data?.url) {
     throw new Error(result.message || "封面上传失败");
-  }
-
-  return result.data.url;
-}
-
-/** 上传图书 PDF 并返回公开地址。 */
-async function uploadPdfFile(file: File) {
-  const formData = new FormData();
-  formData.append("file", file);
-
-  const result = await requestJson<UploadResponse>(
-    "/api/admin/books/upload-pdf",
-    {
-      method: "POST",
-      body: formData,
-    },
-    "PDF 上传失败",
-  );
-
-  if (!result.data?.url) {
-    throw new Error(result.message || "PDF 上传失败");
   }
 
   return result.data.url;
@@ -175,8 +163,11 @@ const BookEditorForm = forwardRef<BookEditorFormRef, BookEditorFormProps>(functi
   const coverObjectUrlRef = useRef<string | null>(null);
   const currentCoverUrl = Form.useWatch("coverUrl", form) ?? "";
   const currentPdfUrl = Form.useWatch("pdfUrl", form) ?? "";
+  const currentPdfFileName = Form.useWatch("pdfFileName", form) ?? "";
   const normalizedCoverUrl = currentCoverUrl.trim();
   const normalizedPdfUrl = currentPdfUrl.trim();
+  const normalizedPdfFileName = currentPdfFileName.trim();
+  const pendingPdfFileName = (pdfFileList.find((file) => file.originFileObj)?.originFileObj as File | undefined)?.name ?? "";
 
   /** 同步封面上传列表对应的预览图。 */
   function updateCoverPreview(nextFileList: UploadFile[]) {
@@ -222,7 +213,7 @@ const BookEditorForm = forwardRef<BookEditorFormRef, BookEditorFormProps>(functi
           throw new Error("请先上传封面");
         }
 
-        if (!values.pdfUrl && !selectedPdfFile) {
+        if (!values.pdfObjectKey && !selectedPdfFile) {
           throw new Error("请先上传 PDF");
         }
 
@@ -295,6 +286,22 @@ const BookEditorForm = forwardRef<BookEditorFormRef, BookEditorFormProps>(functi
         <Input.TextArea rows={4} placeholder="请输入图书简介" />
       </Form.Item>
 
+      <Form.Item name="pdfUrl" hidden>
+        <Input />
+      </Form.Item>
+
+      <Form.Item name="pdfObjectKey" hidden>
+        <Input />
+      </Form.Item>
+
+      <Form.Item name="pdfFileName" hidden>
+        <Input />
+      </Form.Item>
+
+      <Form.Item name="pdfSizeBytes" hidden>
+        <Input />
+      </Form.Item>
+
       <Form.Item label="上传 PDF" className="mb-5">
         <Upload.Dragger
           accept=".pdf,application/pdf"
@@ -309,17 +316,16 @@ const BookEditorForm = forwardRef<BookEditorFormRef, BookEditorFormProps>(functi
         >
           <div className="py-5">
             <p className="text-sm font-medium text-slate-900">点击或拖拽 PDF 到此处</p>
-            <p className="mt-1 text-xs text-slate-500">保存时会调用 `/api/admin/books/upload-pdf` 上传图书文件。</p>
+            <p className="mt-1 text-xs text-slate-500">保存时会先向 `/api/admin/books/upload-session` 申请上传会话，再直接分片上传到 TOS。</p>
           </div>
         </Upload.Dragger>
       </Form.Item>
 
-      <Form.Item name="pdfUrl" label="PDF 地址">
-        <Input placeholder="上传后自动回填 PDF 地址，或直接输入可访问链接" />
-      </Form.Item>
-
       <div className="mb-5 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3">
         <p className="text-sm font-medium text-slate-900">当前 PDF</p>
+        {pendingPdfFileName ? (
+          <p className="mt-1 text-sm text-slate-600">{pendingPdfFileName}，保存时会直接分片上传到 TOS。</p>
+        ) : null}
         {normalizedPdfUrl ? (
           <a
             href={normalizedPdfUrl}
@@ -329,6 +335,8 @@ const BookEditorForm = forwardRef<BookEditorFormRef, BookEditorFormProps>(functi
           >
             {normalizedPdfUrl}
           </a>
+        ) : normalizedPdfFileName ? (
+          <p className="mt-1 text-sm text-slate-600">{normalizedPdfFileName}</p>
         ) : (
           <p className="mt-1 text-sm text-slate-500">保存后在这里查看当前 PDF</p>
         )}
@@ -361,11 +369,19 @@ function renderStatusTag(status: BookCollectionItem["status"]) {
 /** 根据弹框模式提交创建或更新请求。 */
 async function saveBookEditorResult(result: BookEditorSubmitResult) {
   const coverUrl = result.coverFile ? await uploadCoverFile(result.coverFile) : result.values.coverUrl;
-  const pdfUrl = result.pdfFile ? await uploadPdfFile(result.pdfFile) : result.values.pdfUrl;
+  const uploadedPdf = result.pdfFile
+    ? await uploadBookPdfWithMultipart(result.pdfFile)
+    : {
+        objectKey: result.values.pdfObjectKey,
+        fileName: result.values.pdfFileName,
+        fileSize: result.values.pdfSizeBytes,
+      };
   const values = {
     ...result.values,
     coverUrl,
-    pdfUrl,
+    pdfObjectKey: uploadedPdf.objectKey,
+    pdfFileName: uploadedPdf.fileName,
+    pdfSizeBytes: uploadedPdf.fileSize,
   };
 
   if (result.data.mode === "edit" && result.data.id) {
@@ -469,7 +485,7 @@ export function BookManager() {
             <h2 className="text-lg font-semibold text-slate-900">图书管理</h2>
             <p className="mt-1 text-sm text-slate-500">维护图书封面、简介、PDF 文件入口和发布状态。</p>
           </div>
-          <p className="text-xs text-slate-500">封面上传走 `/api/admin/images/upload`，PDF 上传走 `/api/admin/books/upload-pdf`。</p>
+          <p className="text-xs text-slate-500">封面上传走 `/api/admin/images/upload`，PDF 上传改为向 `/api/admin/books/upload-session` 申请 TOS 私有分片上传会话。</p>
         </div>
       </section>
 

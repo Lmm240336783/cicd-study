@@ -13,6 +13,9 @@ test("builds empty book form defaults", () => {
     coverUrl: "",
     description: "",
     pdfUrl: "",
+    pdfObjectKey: "",
+    pdfFileName: "",
+    pdfSizeBytes: 0,
     status: "draft",
   });
 });
@@ -24,7 +27,10 @@ test("builds book form values from a selected row", () => {
       title: "你当像鸟飞往你的山",
       coverUrl: "https://example.com/book-cover.jpg",
       description: "成长与自我教育。",
-      pdfUrl: "https://example.com/book.pdf",
+      pdfUrl: "/api/admin/books/book-1/pdf",
+      pdfObjectKey: "admin-book-pdfs/book-1.pdf",
+      pdfFileName: "你当像鸟飞往你的山.pdf",
+      pdfSizeBytes: 1048576,
       status: "published",
       createdAt: "2026-05-08T00:00:00.000Z",
       updatedAt: "2026-05-08T00:00:00.000Z",
@@ -33,7 +39,10 @@ test("builds book form values from a selected row", () => {
       title: "你当像鸟飞往你的山",
       coverUrl: "https://example.com/book-cover.jpg",
       description: "成长与自我教育。",
-      pdfUrl: "https://example.com/book.pdf",
+      pdfUrl: "/api/admin/books/book-1/pdf",
+      pdfObjectKey: "admin-book-pdfs/book-1.pdf",
+      pdfFileName: "你当像鸟飞往你的山.pdf",
+      pdfSizeBytes: 1048576,
       status: "published",
     },
   );
@@ -45,14 +54,19 @@ test("builds create book payload with trimmed text fields", () => {
       title: "  人类群星闪耀时  ",
       coverUrl: " https://example.com/cover.jpg ",
       description: "  历史瞬间群像。  ",
-      pdfUrl: " https://example.com/book.pdf ",
+      pdfUrl: "/api/admin/books/book-2/pdf",
+      pdfObjectKey: " admin-book-pdfs/book-2.pdf ",
+      pdfFileName: " 人类群星闪耀时.pdf ",
+      pdfSizeBytes: 2097152,
       status: "published",
     }),
     {
       title: "人类群星闪耀时",
       coverUrl: "https://example.com/cover.jpg",
       description: "历史瞬间群像。",
-      pdfUrl: "https://example.com/book.pdf",
+      pdfObjectKey: "admin-book-pdfs/book-2.pdf",
+      pdfFileName: "人类群星闪耀时.pdf",
+      pdfSizeBytes: 2097152,
       status: "published",
     },
   );
@@ -64,14 +78,19 @@ test("builds update book payload from form values", () => {
       title: "失明症漫记",
       coverUrl: "https://example.com/blindness-cover.jpg",
       description: "",
-      pdfUrl: "https://example.com/blindness.pdf",
+      pdfUrl: "/api/admin/books/book-3/pdf",
+      pdfObjectKey: "admin-book-pdfs/book-3.pdf",
+      pdfFileName: "失明症漫记.pdf",
+      pdfSizeBytes: 3145728,
       status: "draft",
     }),
     {
       title: "失明症漫记",
       coverUrl: "https://example.com/blindness-cover.jpg",
       description: "",
-      pdfUrl: "https://example.com/blindness.pdf",
+      pdfObjectKey: "admin-book-pdfs/book-3.pdf",
+      pdfFileName: "失明症漫记.pdf",
+      pdfSizeBytes: 3145728,
       status: "draft",
     },
   );
@@ -94,12 +113,12 @@ test("renders the admin book manager shell with pdf upload affordances", () => {
   assert.match(source, /api="\/api\/admin\/books"/);
   assert.match(source, /上传 PDF/);
   assert.match(source, /\/api\/admin\/images\/upload/);
-  assert.match(source, /\/api\/admin\/books\/upload-pdf/);
+  assert.match(source, /\/api\/admin\/books\/upload-session/);
   assert.match(source, /createBook/);
   assert.match(source, /updateBook/);
   assert.match(source, /deleteBook/);
   assert.match(source, /uploadCoverFile/);
-  assert.match(source, /uploadPdfFile/);
+  assert.match(source, /uploadBookPdfWithMultipart/);
   assert.match(source, /modalRef\.current\?\.open\("新增图书"/);
   assert.match(source, /mode === "edit"/);
   assert.match(source, /当前 PDF/);
@@ -109,14 +128,20 @@ test("renders the admin book manager shell with pdf upload affordances", () => {
   assert.doesNotMatch(source, /\] as const;/);
   assert.match(source, /Form\.useForm<BookManagerFormValues>\(\)/);
   assert.match(source, /Form\.useWatch\("pdfUrl", form\)/);
+  assert.match(source, /Form\.useWatch\("pdfFileName", form\)/);
   assert.match(source, /form=\{form\}/);
   assert.match(source, /currentPdfUrl/);
+  assert.match(source, /currentPdfFileName/);
   assert.match(source, /const normalizedPdfUrl = currentPdfUrl\.trim\(\);/);
   assert.match(source, /normalizedPdfUrl \? \(/);
   assert.match(source, /href=\{normalizedPdfUrl\}/);
   assert.match(source, /\{normalizedPdfUrl\}/);
+  assert.match(source, /values\.pdfObjectKey/);
+  assert.match(source, /values\.pdfFileName/);
+  assert.match(source, /values\.pdfSizeBytes/);
   assert.match(source, /保存后在这里查看当前 PDF/);
   assert.doesNotMatch(source, /href=\{currentPdfUrl \|\| "#"\}/);
+  assert.doesNotMatch(source, /\/api\/admin\/books\/upload-pdf/);
   assert.match(source, /confirmLoading=\{saving\}/);
   assert.match(source, /tableRef\.current\?\.reload\(\)/);
   assert.doesNotMatch(source, /等待后端\/API 接入/);

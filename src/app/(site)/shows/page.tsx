@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { connection } from "next/server";
+import { CollectionEmptyState } from "@/components/site/CollectionEmptyState";
 import { listPublicShows } from "@/lib/server/content/store";
 import styles from "@/components/site/site-visuals.module.scss";
 import { cn } from "@/lib/utils/cn";
@@ -35,11 +36,12 @@ export default async function PublicShowsPage() {
   await connection();
 
   const shows = await listPublicShows();
+  const isShowsEmpty = shows.length === 0;
 
   return (
     <div className="mx-auto w-full max-w-[92rem] px-4 pb-12 pt-6 md:px-6 md:pb-16">
       <section className={cn(styles.surfacePanel, "overflow-hidden rounded-[30px] p-3 md:p-4")}>
-        <header className={cn(styles.listHeader, "rounded-[22px] px-5 py-4")}>
+        {/* <header className={cn(styles.listHeader, "rounded-[22px] px-5 py-4")}>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h1 className="text-3xl font-black text-slate-900">电视剧</h1>
@@ -56,36 +58,44 @@ export default async function PublicShowsPage() {
             <span className={cn(styles.mutedChip, "px-3 py-1")}>站内推荐</span>
           </div>
           <div className="text-xs font-semibold text-slate-700">按更新时间与推荐度展示</div>
-        </div>
+        </div> */}
 
-        <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {shows.map((item, index) => (
-            <Link
-              key={item.id}
-              href={`/shows/${item.id}`}
-              className={cn(styles.shelfCard, "group block overflow-hidden rounded-[16px] bg-[#fff9e8]")}
-            >
-              <div
-                className={cn(styles.mediaCardPlain, "w-full transition duration-300 group-hover:scale-[1.02]")}
-                style={{
-                  ...posterCoverStyle(item.posterUrl, index),
-                  height: `${showCardHeight(index)}px`,
-                }}
-              />
-              <div className="space-y-2 p-3">
-                <div className="flex items-center justify-between gap-2">
-                  <h2 className="truncate font-semibold text-slate-900">{item.name}</h2>
-                  <span className={cn(styles.activeChip, "px-2.5 py-1 text-[11px] text-slate-900")}>评分 {item.rating}</span>
+        {isShowsEmpty ? (
+          <CollectionEmptyState
+            eyebrow="公开片单"
+            title="剧集片单正在布展中"
+            description="电视剧展位还在整理中，等公开片单发布后会直接陈列在这个区域。"
+          />
+        ) : (
+          <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {shows.map((item, index) => (
+              <Link
+                key={item.id}
+                href={`/shows/${item.id}`}
+                className={cn(styles.shelfCard, "group block overflow-hidden rounded-[16px] bg-[#fff9e8]")}
+              >
+                <div
+                  className={cn(styles.mediaCardPlain, "w-full transition duration-300 group-hover:scale-[1.02]")}
+                  style={{
+                    ...posterCoverStyle(item.posterUrl, index),
+                    height: `${showCardHeight(index)}px`,
+                  }}
+                />
+                <div className="space-y-2 p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <h2 className="truncate font-semibold text-slate-900">{item.name}</h2>
+                    <span className={cn(styles.activeChip, "px-2.5 py-1 text-[11px] text-slate-900")}>评分 {item.rating}</span>
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    {item.year} · {item.country} · {item.genres.join(" / ")}
+                  </p>
+                  <p className="line-clamp-2 text-sm text-slate-600">{item.summary}</p>
+                  <p className="line-clamp-2 text-xs font-semibold text-[#8b49cd]">推荐理由：{item.recommendReason}</p>
                 </div>
-                <p className="text-xs text-slate-500">
-                  {item.year} · {item.country} · {item.genres.join(" / ")}
-                </p>
-                <p className="line-clamp-2 text-sm text-slate-600">{item.summary}</p>
-                <p className="line-clamp-2 text-xs font-semibold text-[#8b49cd]">推荐理由：{item.recommendReason}</p>
-              </div>
-            </Link>
-          ))}
-        </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );

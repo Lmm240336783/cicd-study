@@ -1,15 +1,40 @@
 export type ContentStatus = "draft" | "published";
 
+export type MediaType = "image" | "video";
+
+export type ImageGenerationSize = "1024x1024" | "1536x1024" | "1024x1536";
+
+export type ImageGenerationQuality = "low" | "medium" | "high" | "auto";
+
+export type ImageGenerationBackground = "opaque" | "transparent" | "auto";
+
 export type ImageCollectionItem = {
   id: string;
   title: string;
   description: string;
   imageUrl: string;
+  mediaType: MediaType;
   tags: string[];
   isFeatured: boolean;
   status: ContentStatus;
   createdAt: string;
   updatedAt: string;
+};
+
+export type ImageAlbumListItem = {
+  id: string;
+  title: string;
+  description: string;
+  coverUrl: string;
+  coverMediaType: MediaType;
+  imageCount: number;
+  status: ContentStatus;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ImageAlbumDetailItem = ImageAlbumListItem & {
+  images: ImageCollectionItem[];
 };
 
 export type BookCollectionItem = {
@@ -18,6 +43,9 @@ export type BookCollectionItem = {
   coverUrl: string;
   description: string;
   pdfUrl: string;
+  pdfObjectKey: string;
+  pdfFileName: string;
+  pdfSizeBytes: number;
   status: ContentStatus;
   createdAt: string;
   updatedAt: string;
@@ -28,6 +56,17 @@ export type ImageTagItem = {
   name: string;
   createdAt: string;
   updatedAt: string;
+};
+
+export type GeneratedAdminImageItem = {
+  model: string;
+  prompt: string;
+  revisedPrompt: string;
+  size: ImageGenerationSize;
+  quality: ImageGenerationQuality;
+  background: ImageGenerationBackground;
+  imageUrl: string;
+  storagePath: string;
 };
 
 export type ShowCollectionItem = {

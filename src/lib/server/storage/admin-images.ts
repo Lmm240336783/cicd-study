@@ -3,24 +3,32 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import type { MediaType } from "@/types";
 import { createSupabaseAdminClient } from "@/lib/server/supabase/admin";
+import { inferMediaTypeFromSource, isImageMimeType, isVideoMimeType } from "@/lib/utils/media";
 
 const bucketName = process.env.SUPABASE_STORAGE_BUCKET;
 
-const imageContentTypeByExtension: Record<string, string> = {
+const mediaContentTypeByExtension: Record<string, string> = {
   ".gif": "image/gif",
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
+  ".mov": "video/quicktime",
+  ".mp4": "video/mp4",
+  ".m4v": "video/mp4",
+  ".ogv": "video/ogg",
   ".png": "image/png",
+  ".webm": "video/webm",
   ".webp": "image/webp",
 };
 
-export type AdminImageUploadResult = {
+export type AdminMediaUploadResult = {
+  mediaType: MediaType;
   path: string;
   url: string;
 };
 
-type UploadAdminImageBinaryInput = {
+type UploadAdminMediaBinaryInput = {
   bytes: Buffer;
   contentType?: string;
   filename: string;
@@ -36,31 +44,35 @@ function assertBucketName() {
 }
 
 /** 从文件名或 MIME 类型里提取一个安全扩展名。 */
-export function getSafeImageExtension(filename: string, contentType: string) {
+export function getSafeMediaExtension(filename: string, contentType: string) {
   const extension = filename.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "");
   if (extension) {
     return extension;
   }
 
+  if (isVideoMimeType(contentType)) {
+    return contentType.split("/").pop()?.replace(/[^a-z0-9]/g, "") || "mp4";
+  }
+
   return contentType.split("/").pop()?.replace(/[^a-z0-9]/g, "") || "jpg";
 }
 
-/** 根据文件名推断图片内容类型，供本地文件上传时复用。 */
-function inferImageContentType(filename: string) {
+/** 根据文件名推断媒体内容类型，供本地文件上传时复用。 */
+function inferMediaContentType(filename: string) {
   const extension = path.extname(filename).toLowerCase();
-  return imageContentTypeByExtension[extension] ?? "image/jpeg";
+  return mediaContentTypeByExtension[extension] ?? "image/jpeg";
 }
 
-/** 把图片二进制内容上传到后台统一的 Supabase Storage。 */
-export async function uploadAdminImageBinary({
+/** 把图片或视频二进制内容上传到后台统一的 Supabase Storage。 */
+export async function uploadAdminMediaBinary({
   bytes,
   contentType,
   filename,
-}: UploadAdminImageBinaryInput): Promise<AdminImageUploadResult> {
+}: UploadAdminMediaBinaryInput): Promise<AdminMediaUploadResult> {
   const resolvedBucketName = assertBucketName();
-
-  const resolvedContentType = contentType?.startsWith("image/") ? contentType : inferImageContentType(filename);
-  const extension = getSafeImageExtension(filename, resolvedContentType);
+  const resolvedContentType = isImageMimeType(contentType) || isVideoMimeType(contentType) ? contentType! : inferMediaContentType(filename);
+  const mediaType = inferMediaTypeFromSource({ contentType: resolvedContentType, filename });
+  const extension = getSafeMediaExtension(filename, resolvedContentType);
   const objectPath = `admin-images/${randomUUID()}.${extension}`;
   const supabase = createSupabaseAdminClient();
   const { error } = await supabase.storage.from(resolvedBucketName).upload(objectPath, bytes, {
@@ -74,13 +86,24 @@ export async function uploadAdminImageBinary({
 
   const { data } = supabase.storage.from(resolvedBucketName).getPublicUrl(objectPath);
   return {
+    mediaType,
     path: objectPath,
     url: data.publicUrl,
   };
 }
 
+/** 把图片二进制内容上传到后台统一的 Supabase Storage。 */
+export async function uploadAdminImageBinary(input: UploadAdminMediaBinaryInput) {
+  const uploaded = await uploadAdminMediaBinary(input);
+  if (uploaded.mediaType !== "image") {
+    throw new Error("Expected image upload");
+  }
+
+  return uploaded;
+}
+
 /** 读取本地图片文件并上传到后台统一的存储桶。 */
-export async function uploadLocalAdminImage(localPath: string): Promise<AdminImageUploadResult> {
+export async function uploadLocalAdminImage(localPath: string) {
   const filename = path.basename(localPath);
   const bytes = await readFile(localPath);
   return uploadAdminImageBinary({

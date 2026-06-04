@@ -5,6 +5,9 @@ export type BookManagerFormValues = {
   coverUrl: string;
   description: string;
   pdfUrl: string;
+  pdfObjectKey: string;
+  pdfFileName: string;
+  pdfSizeBytes: number;
   status: ContentStatus;
 };
 
@@ -16,6 +19,9 @@ export function buildBookFormValues(book?: BookCollectionItem | null): BookManag
       coverUrl: "",
       description: "",
       pdfUrl: "",
+      pdfObjectKey: "",
+      pdfFileName: "",
+      pdfSizeBytes: 0,
       status: "draft",
     };
   }
@@ -25,6 +31,9 @@ export function buildBookFormValues(book?: BookCollectionItem | null): BookManag
     coverUrl: book.coverUrl,
     description: book.description,
     pdfUrl: book.pdfUrl,
+    pdfObjectKey: book.pdfObjectKey,
+    pdfFileName: book.pdfFileName,
+    pdfSizeBytes: book.pdfSizeBytes,
     status: book.status,
   };
 }
@@ -35,7 +44,9 @@ export function buildCreateBookPayload(values: BookManagerFormValues): CreateBoo
     title: values.title.trim(),
     coverUrl: values.coverUrl.trim(),
     description: values.description.trim(),
-    pdfUrl: values.pdfUrl.trim(),
+    pdfObjectKey: values.pdfObjectKey.trim(),
+    pdfFileName: values.pdfFileName.trim(),
+    pdfSizeBytes: Number(values.pdfSizeBytes) || 0,
     status: values.status,
   };
 }

@@ -28,25 +28,15 @@ const siteMenuItems: SiteMenuItem[] = [
   { href: "/", label: "首页" },
   { href: "/images", label: "图片" },
   { href: "/shows", label: "电视剧" },
-  { label: "电影" },
+  // { label: "电影" },
   { href: "/music", label: "音乐" },
-  { label: "书籍" },
-  { label: "关于我" },
+  { href: "/books", label: "书籍" },
+  // { label: "关于我" },
 ];
 
 /** Render the home icon. */
 function HomeIcon() {
   return <span aria-hidden="true" className={styles.homeNavIcon} />;
-}
-
-/** Render the search icon. */
-function SearchIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5">
-      <circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" strokeWidth="2" />
-      <path d="m16 16 4 4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
 }
 
 /** Check whether a nav item matches the current path. */
@@ -70,6 +60,10 @@ function getActiveNavClass(href: string) {
 
   if (href === "/music") {
     return cn(styles.musicNavActive, "text-slate-950");
+  }
+
+  if (href === "/books") {
+    return cn(styles.booksNavActive, "text-white");
   }
 
   return "bg-[#f7d95f] text-slate-950 shadow-[0_10px_22px_rgba(247,217,95,0.44)]";
@@ -135,10 +129,10 @@ export function SiteHeader({ session }: SiteHeaderProps) {
 
   return (
     <>
-      <header className="sticky top-0 z-40 px-4 pt-4 md:px-6 md:pt-6">
-        <div className={cn(styles.navSurface, "mx-auto flex w-full max-w-[90rem] items-center justify-between gap-4 rounded-[28px] px-4 py-3 backdrop-blur md:px-6 lg:px-8")}>
+      <header className="sticky top-0 z-40 px-4 pt-1.5 md:px-6 md:pt-2">
+        <div className={cn(styles.navSurface, "mx-auto flex w-full max-w-[90rem] items-center justify-between gap-3 rounded-[24px] px-3 py-2 backdrop-blur md:px-5 md:py-2.5 lg:px-6")}>
           <Link href="/" className="flex shrink-0 items-center">
-            <BrandMark className="h-10 w-auto md:h-12" preload />
+            <BrandMark className="h-8 w-auto md:h-10" preload />
           </Link>
 
           <nav className="flex min-w-0 flex-1 items-center justify-start gap-1 overflow-x-auto px-1 lg:justify-center">
@@ -147,7 +141,7 @@ export function SiteHeader({ session }: SiteHeaderProps) {
                 return (
                   <span
                     key={item.label}
-                    className="hidden whitespace-nowrap rounded-full px-4 py-2.5 text-sm font-semibold text-slate-800 md:inline-flex"
+                    className="hidden whitespace-nowrap rounded-full px-3.5 py-2 text-sm font-semibold text-slate-800 md:inline-flex"
                   >
                     {item.label}
                   </span>
@@ -161,7 +155,7 @@ export function SiteHeader({ session }: SiteHeaderProps) {
                   key={item.label}
                   href={item.href}
                   className={cn(
-                    "flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 py-2.5 text-sm font-semibold transition md:px-5 md:py-3",
+                    "flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3.5 py-2 text-sm font-semibold transition md:px-4 md:py-2.5",
                     active ? getActiveNavClass(item.href) : "text-slate-800 hover:bg-[#fff2c2] hover:text-slate-950",
                   )}
                 >
@@ -173,25 +167,18 @@ export function SiteHeader({ session }: SiteHeaderProps) {
           </nav>
 
           <div className="flex shrink-0 items-center gap-2">
-            <button
-              type="button"
-              className={cn(styles.searchButton, "hidden h-11 w-11 items-center justify-center rounded-full text-slate-700 transition hover:border-[#d8c072] hover:bg-[#fffaf0] md:flex")}
-              aria-label="搜索收藏"
-            >
-              <SearchIcon />
-            </button>
             {session ? (
               <>
                 <Link
                   href="/admin"
-                  className={cn(styles.violetButton, "rounded-full px-5 py-2.5 text-sm font-bold text-white transition hover:brightness-105")}
+                  className={cn(styles.violetButton, "rounded-full px-4 py-2 text-sm font-bold text-white transition hover:brightness-105")}
                 >
                   前往后台
                 </Link>
                 <div className="group relative">
                   <button
                     type="button"
-                    className="rounded-full border border-[#ead59a] bg-white/90 px-4 py-2.5 text-sm font-black text-slate-800 transition hover:bg-[#fff3ca]"
+                    className="rounded-full border border-[#ead59a] bg-white/90 px-3.5 py-2 text-sm font-black text-slate-800 transition hover:bg-[#fff3ca]"
                   >
                     {session.name}
                   </button>
@@ -210,7 +197,7 @@ export function SiteHeader({ session }: SiteHeaderProps) {
               <button
                 type="button"
                 onClick={() => openAuthModal("login")}
-                className={cn(styles.violetButton, "rounded-full px-5 py-2.5 text-sm font-bold text-white transition hover:brightness-105")}
+                className={cn(styles.violetButton, "rounded-full px-4 py-2 text-sm font-bold text-white transition hover:brightness-105")}
               >
                 登录 / 注册
               </button>

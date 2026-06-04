@@ -29,7 +29,19 @@ test("home image section mirrors the hot-show layout exactly", () => {
 test("public shows list cards link to public show detail pages", () => {
   const source = readFileSync("src/app/(site)/shows/page.tsx", "utf8");
 
+  assert.match(source, /CollectionEmptyState/);
+  assert.match(source, /shows\.length === 0/);
+  assert.match(source, /剧集片单正在布展中/);
   assert.match(source, /href=\{`\/shows\/\$\{item\.id\}`\}/);
+});
+
+test("public images list page renders a shared empty state when no images are published", () => {
+  const source = readFileSync("src/app/(site)/images/page.tsx", "utf8");
+
+  assert.match(source, /CollectionEmptyState/);
+  assert.match(source, /images\.length === 0/);
+  assert.match(source, /图片馆正在布置中/);
+  assert.match(source, /href=\{`\/images\/\$\{item\.id\}`\}/);
 });
 
 test("public show detail page uses carousel images and two tabs", () => {

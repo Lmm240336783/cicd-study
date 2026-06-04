@@ -18,9 +18,11 @@ export function normalizeCreateBookPayload(data: unknown): CreateBookPayload | n
 
   const title = typeof data.title === "string" ? data.title.trim() : "";
   const coverUrl = typeof data.coverUrl === "string" ? data.coverUrl.trim() : "";
-  const pdfUrl = typeof data.pdfUrl === "string" ? data.pdfUrl.trim() : "";
+  const pdfObjectKey = typeof data.pdfObjectKey === "string" ? data.pdfObjectKey.trim() : "";
+  const pdfFileName = typeof data.pdfFileName === "string" ? data.pdfFileName.trim() : "";
+  const pdfSizeBytes = typeof data.pdfSizeBytes === "number" && Number.isFinite(data.pdfSizeBytes) ? data.pdfSizeBytes : 0;
 
-  if (!title || !coverUrl || !pdfUrl) {
+  if (!title || !coverUrl || !pdfObjectKey || !pdfFileName || pdfSizeBytes <= 0) {
     return null;
   }
 
@@ -28,7 +30,9 @@ export function normalizeCreateBookPayload(data: unknown): CreateBookPayload | n
     title,
     coverUrl,
     description: typeof data.description === "string" ? data.description.trim() : "",
-    pdfUrl,
+    pdfObjectKey,
+    pdfFileName,
+    pdfSizeBytes,
     status: data.status === "published" ? "published" : "draft",
   };
 }
@@ -65,12 +69,28 @@ export function normalizeUpdateBookPayload(data: unknown): UpdateBookPayload | n
     payload.description = data.description.trim();
   }
 
-  if (hasOwnKey(data, "pdfUrl")) {
-    if (typeof data.pdfUrl !== "string" || data.pdfUrl.trim() === "") {
+  if (hasOwnKey(data, "pdfObjectKey")) {
+    if (typeof data.pdfObjectKey !== "string" || data.pdfObjectKey.trim() === "") {
       return null;
     }
 
-    payload.pdfUrl = data.pdfUrl.trim();
+    payload.pdfObjectKey = data.pdfObjectKey.trim();
+  }
+
+  if (hasOwnKey(data, "pdfFileName")) {
+    if (typeof data.pdfFileName !== "string" || data.pdfFileName.trim() === "") {
+      return null;
+    }
+
+    payload.pdfFileName = data.pdfFileName.trim();
+  }
+
+  if (hasOwnKey(data, "pdfSizeBytes")) {
+    if (typeof data.pdfSizeBytes !== "number" || !Number.isFinite(data.pdfSizeBytes) || data.pdfSizeBytes <= 0) {
+      return null;
+    }
+
+    payload.pdfSizeBytes = data.pdfSizeBytes;
   }
 
   if (hasOwnKey(data, "status")) {

@@ -7,10 +7,25 @@ import { cn } from "@/lib/utils/cn";
 import type { BookCollectionItem } from "@/types";
 
 type PublicBookDetailPageProps = {
-  params: Promise<{
-    id: string;
+  searchParams: Promise<{
+    id?: string | string[];
   }>;
 };
+
+/** 解析书籍详情页查询参数中的单个图书 id。 */
+function getBookDetailId(searchParams: Awaited<PublicBookDetailPageProps["searchParams"]>) {
+  const rawId = searchParams.id;
+
+  if (typeof rawId === "string") {
+    return rawId;
+  }
+
+  if (Array.isArray(rawId)) {
+    return rawId[0] ?? "";
+  }
+
+  return "";
+}
 
 /** 生成图书详情封面背景样式。 */
 function bookCoverStyle(book: BookCollectionItem) {
@@ -26,10 +41,17 @@ function bookCoverStyle(book: BookCollectionItem) {
 }
 
 /** 渲染前台图书详情页。 */
-export default async function PublicBookDetailPage({ params }: PublicBookDetailPageProps) {
+export default async function PublicBookDetailPage({ searchParams }: PublicBookDetailPageProps) {
   await connection();
 
-  const { id } = await params;
+  const resolvedSearchParams = await searchParams;
+  const rawId = resolvedSearchParams.id;
+  const id = getBookDetailId(resolvedSearchParams);
+
+  if (!rawId || !id) {
+    notFound();
+  }
+
   const book = await getPublicBookById(id);
 
   if (!book) {

@@ -9,27 +9,33 @@ test("normalizeCreateBookPayload trims required fields and keeps published statu
       title: "  The Left Hand of Darkness  ",
       coverUrl: " https://example.com/cover.jpg ",
       description: "  A classic sci-fi novel.  ",
-      pdfUrl: " https://example.com/book.pdf ",
+      pdfObjectKey: " admin-book-pdfs/book-1.pdf ",
+      pdfFileName: " The Left Hand of Darkness.pdf ",
+      pdfSizeBytes: 4194304,
       status: "published",
     }),
     {
       title: "The Left Hand of Darkness",
       coverUrl: "https://example.com/cover.jpg",
       description: "A classic sci-fi novel.",
-      pdfUrl: "https://example.com/book.pdf",
+      pdfObjectKey: "admin-book-pdfs/book-1.pdf",
+      pdfFileName: "The Left Hand of Darkness.pdf",
+      pdfSizeBytes: 4194304,
       status: "published",
     },
   );
 });
 
-test("normalizeCreateBookPayload requires non-empty trimmed title, coverUrl, and pdfUrl", async () => {
+test("normalizeCreateBookPayload requires non-empty trimmed title, coverUrl, pdfObjectKey, pdfFileName and valid pdfSizeBytes", async () => {
   const { normalizeCreateBookPayload } = await import("../src/lib/server/content/book-payloads.ts");
 
   assert.equal(
     normalizeCreateBookPayload({
       title: "   ",
       coverUrl: "https://example.com/cover.jpg",
-      pdfUrl: "https://example.com/book.pdf",
+      pdfObjectKey: "admin-book-pdfs/book.pdf",
+      pdfFileName: "book.pdf",
+      pdfSizeBytes: 1,
     }),
     null,
   );
@@ -38,7 +44,9 @@ test("normalizeCreateBookPayload requires non-empty trimmed title, coverUrl, and
     normalizeCreateBookPayload({
       title: "The Dispossessed",
       coverUrl: "   ",
-      pdfUrl: "https://example.com/book.pdf",
+      pdfObjectKey: "admin-book-pdfs/book.pdf",
+      pdfFileName: "book.pdf",
+      pdfSizeBytes: 1,
     }),
     null,
   );
@@ -47,7 +55,31 @@ test("normalizeCreateBookPayload requires non-empty trimmed title, coverUrl, and
     normalizeCreateBookPayload({
       title: "The Dispossessed",
       coverUrl: "https://example.com/cover.jpg",
-      pdfUrl: "   ",
+      pdfObjectKey: "   ",
+      pdfFileName: "book.pdf",
+      pdfSizeBytes: 1,
+    }),
+    null,
+  );
+
+  assert.equal(
+    normalizeCreateBookPayload({
+      title: "The Dispossessed",
+      coverUrl: "https://example.com/cover.jpg",
+      pdfObjectKey: "admin-book-pdfs/book.pdf",
+      pdfFileName: "   ",
+      pdfSizeBytes: 1,
+    }),
+    null,
+  );
+
+  assert.equal(
+    normalizeCreateBookPayload({
+      title: "The Dispossessed",
+      coverUrl: "https://example.com/cover.jpg",
+      pdfObjectKey: "admin-book-pdfs/book.pdf",
+      pdfFileName: "book.pdf",
+      pdfSizeBytes: 0,
     }),
     null,
   );
@@ -60,14 +92,18 @@ test("normalizeCreateBookPayload defaults description and status to draft", asyn
     normalizeCreateBookPayload({
       title: "Kindred",
       coverUrl: "https://example.com/kindred.jpg",
-      pdfUrl: "https://example.com/kindred.pdf",
+      pdfObjectKey: "admin-book-pdfs/kindred.pdf",
+      pdfFileName: "Kindred.pdf",
+      pdfSizeBytes: 1024,
       status: "archived" as never,
     }),
     {
       title: "Kindred",
       coverUrl: "https://example.com/kindred.jpg",
       description: "",
-      pdfUrl: "https://example.com/kindred.pdf",
+      pdfObjectKey: "admin-book-pdfs/kindred.pdf",
+      pdfFileName: "Kindred.pdf",
+      pdfSizeBytes: 1024,
       status: "draft",
     },
   );
@@ -91,25 +127,31 @@ test("normalizeUpdateBookPayload trims provided fields and allows clearing descr
       title: "  Dune Messiah  ",
       coverUrl: " https://example.com/dune-messiah.jpg ",
       description: "",
-      pdfUrl: " https://example.com/dune-messiah.pdf ",
+      pdfObjectKey: " admin-book-pdfs/dune-messiah.pdf ",
+      pdfFileName: " Dune Messiah.pdf ",
+      pdfSizeBytes: 2048,
       status: "draft",
     }),
     {
       title: "Dune Messiah",
       coverUrl: "https://example.com/dune-messiah.jpg",
       description: "",
-      pdfUrl: "https://example.com/dune-messiah.pdf",
+      pdfObjectKey: "admin-book-pdfs/dune-messiah.pdf",
+      pdfFileName: "Dune Messiah.pdf",
+      pdfSizeBytes: 2048,
       status: "draft",
     },
   );
 });
 
-test("normalizeUpdateBookPayload rejects empty title, coverUrl, or pdfUrl when present", async () => {
+test("normalizeUpdateBookPayload rejects empty title, coverUrl, pdfObjectKey, pdfFileName or invalid pdfSizeBytes when present", async () => {
   const { normalizeUpdateBookPayload } = await import("../src/lib/server/content/book-payloads.ts");
 
   assert.equal(normalizeUpdateBookPayload({ title: "   " }), null);
   assert.equal(normalizeUpdateBookPayload({ coverUrl: "   " }), null);
-  assert.equal(normalizeUpdateBookPayload({ pdfUrl: "   " }), null);
+  assert.equal(normalizeUpdateBookPayload({ pdfObjectKey: "   " }), null);
+  assert.equal(normalizeUpdateBookPayload({ pdfFileName: "   " }), null);
+  assert.equal(normalizeUpdateBookPayload({ pdfSizeBytes: 0 }), null);
 });
 
 test("normalizeUpdateBookPayload rejects unsupported status values", async () => {

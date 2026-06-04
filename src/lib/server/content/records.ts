@@ -2,30 +2,37 @@ import type {
   BookCollectionItem,
   ContentStatus,
   CreateBookPayload,
+  CreateImageAlbumPayload,
   CreateImageTagPayload,
   CreateImagePayload,
   CreateMusicPayload,
   CreateSingerPayload,
   CreateShowPayload,
+  ImageAlbumDetailItem,
+  ImageAlbumListItem,
   MusicCollectionItem,
   ImageTagItem,
   ImageCollectionItem,
   SingerCollectionItem,
   ShowCollectionItem,
   UpdateBookPayload,
+  UpdateImageAlbumPayload,
   UpdateMusicPayload,
   UpdateSingerPayload,
   UpdateImageTagPayload,
   UpdateImagePayload,
   UpdateShowPayload,
 } from "@/types";
+import { inferMediaTypeFromSource } from "@/lib/utils/media";
 
 export type BookRecord = {
   id: string;
   title: string;
   cover_url: string;
   description: string | null;
-  pdf_url: string;
+  pdf_object_key: string;
+  pdf_file_name: string;
+  pdf_size_bytes: number;
   status: ContentStatus | null;
   created_at: string;
   updated_at: string;
@@ -48,6 +55,30 @@ export type ImageTagRecord = {
   name: string;
   created_at: string;
   updated_at: string;
+};
+
+export type ImageAlbumRecord = {
+  id: string;
+  title: string;
+  description: string | null;
+  status: ContentStatus | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ImageAlbumImageRecord = {
+  id?: string;
+  album_id: string;
+  image_id: string;
+  sort_order: number | null;
+  created_at?: string;
+};
+
+export type ImageAlbumImageRelationRecord = {
+  album_id: string;
+  image_id?: string | null;
+  sort_order: number | null;
+  images?: ImageRecord | ImageRecord[] | null;
 };
 
 export type ShowRecord = {
@@ -98,7 +129,9 @@ export type BookWriteRecord = {
   title?: string;
   cover_url?: string;
   description?: string;
-  pdf_url?: string;
+  pdf_object_key?: string;
+  pdf_file_name?: string;
+  pdf_size_bytes?: number;
   status?: ContentStatus;
 };
 
@@ -113,6 +146,18 @@ type ImageWriteRecord = {
 
 type ImageTagWriteRecord = {
   name?: string;
+};
+
+type ImageAlbumWriteRecord = {
+  title?: string;
+  description?: string;
+  status?: ContentStatus;
+};
+
+type ImageAlbumImageWriteRecord = {
+  album_id: string;
+  image_id: string;
+  sort_order: number;
 };
 
 type ShowWriteRecord = {
@@ -168,7 +213,10 @@ export function bookRecordToItem(record: BookRecord): BookCollectionItem {
     title: record.title,
     coverUrl: record.cover_url,
     description: record.description ?? "",
-    pdfUrl: record.pdf_url,
+    pdfUrl: "",
+    pdfObjectKey: record.pdf_object_key,
+    pdfFileName: record.pdf_file_name,
+    pdfSizeBytes: record.pdf_size_bytes,
     status: record.status ?? "draft",
     createdAt: record.created_at,
     updatedAt: record.updated_at,
@@ -181,7 +229,9 @@ export function bookPayloadToInsertRecord(payload: CreateBookPayload): BookWrite
     title: payload.title,
     cover_url: payload.coverUrl,
     description: payload.description ?? "",
-    pdf_url: payload.pdfUrl,
+    pdf_object_key: payload.pdfObjectKey,
+    pdf_file_name: payload.pdfFileName,
+    pdf_size_bytes: payload.pdfSizeBytes,
     status: payload.status ?? "draft",
   };
 }
@@ -192,7 +242,9 @@ export function bookPayloadToUpdateRecord(payload: UpdateBookPayload) {
     title: payload.title,
     cover_url: payload.coverUrl,
     description: payload.description,
-    pdf_url: payload.pdfUrl,
+    pdf_object_key: payload.pdfObjectKey,
+    pdf_file_name: payload.pdfFileName,
+    pdf_size_bytes: payload.pdfSizeBytes,
     status: payload.status,
   });
 }
@@ -204,6 +256,7 @@ export function imageRecordToItem(record: ImageRecord): ImageCollectionItem {
     title: record.title,
     description: record.description ?? "",
     imageUrl: record.image_url,
+    mediaType: inferMediaTypeFromSource({ url: record.image_url }),
     tags: record.tags ?? [],
     isFeatured: record.is_featured ?? false,
     status: record.status ?? "draft",
@@ -234,6 +287,60 @@ export function imagePayloadToUpdateRecord(payload: UpdateImagePayload) {
     is_featured: payload.isFeatured,
     status: payload.status,
   });
+}
+
+/** 将 Supabase 图片合集记录转换为前台列表模型。 */
+export function imageAlbumRecordToListItem(record: ImageAlbumRecord, images: ImageCollectionItem[] = []): ImageAlbumListItem {
+  return {
+    id: record.id,
+    title: record.title,
+    description: record.description ?? "",
+    coverUrl: images[0]?.imageUrl ?? "",
+    coverMediaType: images[0]?.mediaType ?? "image",
+    imageCount: images.length,
+    status: record.status ?? "draft",
+    createdAt: record.created_at,
+    updatedAt: record.updated_at,
+  };
+}
+
+/** 将 Supabase 图片合集记录转换为前台详情模型。 */
+export function imageAlbumRecordToDetailItem(record: ImageAlbumRecord, images: ImageCollectionItem[] = []): ImageAlbumDetailItem {
+  return {
+    ...imageAlbumRecordToListItem(record, images),
+    images,
+  };
+}
+
+/** 将图片合集创建参数转换为 Supabase 插入记录。 */
+export function imageAlbumPayloadToInsertRecord(payload: CreateImageAlbumPayload): ImageAlbumWriteRecord {
+  return {
+    title: payload.title,
+    description: payload.description ?? "",
+    status: payload.status ?? "draft",
+  };
+}
+
+/** 将图片合集更新参数转换为 Supabase 更新记录。 */
+export function imageAlbumPayloadToUpdateRecord(payload: UpdateImageAlbumPayload) {
+  return compactRecord<ImageAlbumWriteRecord>({
+    title: payload.title,
+    description: payload.description,
+    status: payload.status,
+  });
+}
+
+/** 将图片 id 列表转换为合集关联表插入记录，并保留去重后的顺序。 */
+export function imageAlbumImageIdsToInsertRecords(albumId: string, imageIds: string[]): ImageAlbumImageWriteRecord[] {
+  return imageIds
+    .map((imageId) => imageId.trim())
+    .filter(Boolean)
+    .filter((imageId, index, allIds) => allIds.indexOf(imageId) === index)
+    .map((imageId, index) => ({
+      album_id: albumId,
+      image_id: imageId,
+      sort_order: index,
+    }));
 }
 
 /** 将 Supabase 图片标签记录转换为后台标签模型。 */

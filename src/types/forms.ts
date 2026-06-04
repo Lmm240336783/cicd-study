@@ -1,4 +1,9 @@
-import type { ContentStatus } from "./content";
+import type {
+  ContentStatus,
+  ImageGenerationBackground,
+  ImageGenerationQuality,
+  ImageGenerationSize,
+} from "./content";
 
 export type LoginFormValues = {
   email: string;
@@ -13,7 +18,9 @@ export type CreateBookPayload = {
   title: string;
   coverUrl: string;
   description?: string;
-  pdfUrl: string;
+  pdfObjectKey: string;
+  pdfFileName: string;
+  pdfSizeBytes: number;
   status?: ContentStatus;
 };
 
@@ -29,6 +36,22 @@ export type CreateImagePayload = {
 };
 
 export type UpdateImagePayload = Partial<CreateImagePayload>;
+
+export type GenerateAdminImagePayload = {
+  prompt: string;
+  size?: ImageGenerationSize;
+  quality?: ImageGenerationQuality;
+  background?: ImageGenerationBackground;
+};
+
+export type CreateImageAlbumPayload = {
+  title: string;
+  description?: string;
+  imageIds?: string[];
+  status?: ContentStatus;
+};
+
+export type UpdateImageAlbumPayload = Partial<CreateImageAlbumPayload>;
 
 export type CreateShowPayload = {
   name: string;

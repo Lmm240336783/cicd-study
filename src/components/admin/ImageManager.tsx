@@ -3,9 +3,22 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { Button, Form, Input, Popconfirm, Select, Space, Switch, Tag, Upload } from "antd";
 import type { TableColumnsType, UploadFile } from "antd";
-import { ApiTable, RefModal, toast } from "@/components/shared";
+import { ApiTable, MediaAsset, RefModal, toast } from "@/components/shared";
 import type { ApiTableRef, RefModalRef } from "@/components/shared";
-import type { CreateImagePayload, CreateImageTagPayload, ImageCollectionItem, ImageTagItem, UpdateImagePayload } from "@/types";
+import type {
+  CreateImagePayload,
+  CreateImageTagPayload,
+  GenerateAdminImagePayload,
+  GeneratedAdminImageItem,
+  ImageCollectionItem,
+  ImageGenerationBackground,
+  ImageGenerationQuality,
+  ImageGenerationSize,
+  ImageTagItem,
+  MediaType,
+  UpdateImagePayload,
+} from "@/types";
+import { inferMediaTypeFromSource } from "@/lib/utils/media";
 import {
   buildCreateImagePayload,
   buildImageFormValues,
@@ -31,6 +44,7 @@ type ImageMutationResponse = {
 
 type ImageUploadResponse = {
   data?: {
+    mediaType: MediaType;
     path: string;
     url: string;
   };
@@ -46,6 +60,11 @@ type ImageTagMutationResponse = {
   message?: string;
 };
 
+type GenerateImageResponse = {
+  data?: GeneratedAdminImageItem;
+  message?: string;
+};
+
 type ImageEditorSubmitResult = {
   data: ImageModalData;
   file?: File;
@@ -56,10 +75,17 @@ type ImageEditorFormRef = {
   submit: () => Promise<ImageEditorSubmitResult>;
 };
 
-/** 判断弹框参数是否包含完整图片行信息。 */
-function isImageManagerRow(data: ImageModalData): data is ImageManagerRow {
-  return Boolean(data.id && data.title && data.imageUrl && Array.isArray(data.tags));
-}
+type GenerateImageFormValues = {
+  title: string;
+  prompt: string;
+  size: ImageGenerationSize;
+  quality: ImageGenerationQuality;
+  background: ImageGenerationBackground;
+};
+
+type GenerateImageFormRef = {
+  submit: () => Promise<GenerateImageFormValues>;
+};
 
 /** 根据图片表单值生成 Upload 组件的展示列表。 */
 function buildUploadFileList(values: ImageManagerFormValues): UploadFile[] {
@@ -77,7 +103,16 @@ function buildUploadFileList(values: ImageManagerFormValues): UploadFile[] {
   ];
 }
 
-/** 上传图片文件并返回公开访问地址。 */
+/** 从 URL 或文件元信息里推断当前预览媒体类型。 */
+function inferPreviewMediaType(file?: File, url?: string) {
+  return inferMediaTypeFromSource({
+    contentType: file?.type,
+    filename: file?.name,
+    url,
+  });
+}
+
+/** 上传图片或视频文件并返回公开访问地址。 */
 async function uploadImageFile(file: File) {
   const formData = new FormData();
   formData.append("file", file);
@@ -88,14 +123,32 @@ async function uploadImageFile(file: File) {
       method: "POST",
       body: formData,
     },
-    "图片上传失败",
+    "媒体上传失败",
   );
 
   if (!result.data?.url) {
-    throw new Error(result.message || "图片上传失败");
+    throw new Error(result.message || "媒体上传失败");
   }
 
   return result.data.url;
+}
+
+/** 调用后台 AI 图片生成接口，显式使用 gpt-image-2 产出图片。 */
+async function generateImageWithAi(payload: GenerateAdminImagePayload) {
+  const result = await requestJson<GenerateImageResponse>(
+    "/api/admin/images/generate",
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+    "AI 图片生成失败",
+  );
+
+  if (!result.data) {
+    throw new Error(result.message || "AI 图片生成失败");
+  }
+
+  return result.data;
 }
 
 /** 查询后台图片标签字典。 */
@@ -182,9 +235,10 @@ type ImageEditorFormProps = {
 /** 渲染新增和编辑共用的图片表单内容。 */
 const ImageEditorForm = forwardRef<ImageEditorFormRef, ImageEditorFormProps>(function ImageEditorForm({ data, imageTags }, ref) {
   const [form] = Form.useForm<ImageManagerFormValues>();
-  const formValues = buildImageFormValues(isImageManagerRow(data) ? data : null);
+  const formValues = buildImageFormValues(data);
   const [fileList, setFileList] = useState<UploadFile[]>(() => buildUploadFileList(formValues));
   const [previewUrl, setPreviewUrl] = useState(() => formValues.imageUrl);
+  const [previewMediaType, setPreviewMediaType] = useState<MediaType>(() => inferPreviewMediaType(undefined, formValues.imageUrl));
   const previewObjectUrlRef = useRef<string | null>(null);
   const tagOptions = useMemo(() => buildImageTagOptions(imageTags, formValues.tags), [formValues.tags, imageTags]);
 
@@ -200,10 +254,12 @@ const ImageEditorForm = forwardRef<ImageEditorFormRef, ImageEditorFormProps>(fun
       const objectUrl = URL.createObjectURL(latestFile.originFileObj);
       previewObjectUrlRef.current = objectUrl;
       setPreviewUrl(objectUrl);
+      setPreviewMediaType(inferPreviewMediaType(latestFile.originFileObj as File));
       return;
     }
 
     setPreviewUrl(formValues.imageUrl);
+    setPreviewMediaType(inferPreviewMediaType(undefined, formValues.imageUrl));
   }
 
   useEffect(() => {
@@ -222,7 +278,7 @@ const ImageEditorForm = forwardRef<ImageEditorFormRef, ImageEditorFormProps>(fun
         const selectedFile = fileList.find((file) => file.originFileObj)?.originFileObj as File | undefined;
 
         if (!values.imageUrl && !selectedFile) {
-          throw new Error("请先上传图片");
+          throw new Error("请先上传图片或视频");
         }
 
         return {
@@ -245,20 +301,25 @@ const ImageEditorForm = forwardRef<ImageEditorFormRef, ImageEditorFormProps>(fun
     >
       {previewUrl ? (
         <div className="mb-5 space-y-2">
-          <p className="text-sm font-medium text-slate-900">当前图片预览</p>
+          <p className="text-sm font-medium text-slate-900">当前媒体预览</p>
           <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
-            <img
+            <MediaAsset
               src={previewUrl}
+              mediaType={previewMediaType}
               alt="当前图片预览"
               className="h-56 w-full bg-slate-100 object-contain"
+              controls={previewMediaType === "video"}
+              muted={previewMediaType === "video"}
+              playsInline={previewMediaType === "video"}
+              preload={previewMediaType === "video" ? "metadata" : undefined}
             />
           </div>
         </div>
       ) : null}
 
-      <Form.Item label="上传图片" className="mb-5">
+      <Form.Item label="上传媒体" className="mb-5">
         <Upload.Dragger
-          accept="image/*"
+          accept="image/*,video/mp4,video/webm,video/quicktime,video/ogg"
           beforeUpload={() => false}
           fileList={fileList}
           maxCount={1}
@@ -271,7 +332,7 @@ const ImageEditorForm = forwardRef<ImageEditorFormRef, ImageEditorFormProps>(fun
           className="rounded-xl"
         >
           <div className="py-5">
-            <p className="text-sm font-medium text-slate-900">点击或拖拽图片到此处</p>
+            <p className="text-sm font-medium text-slate-900">点击或拖拽图片 / 视频到此处</p>
             <p className="mt-1 text-xs text-slate-500">保存时会上传到后台配置的 Supabase Storage。</p>
           </div>
         </Upload.Dragger>
@@ -283,10 +344,10 @@ const ImageEditorForm = forwardRef<ImageEditorFormRef, ImageEditorFormProps>(fun
 
       <Form.Item
         name="title"
-        label="图片标题"
-        rules={[{ required: true, message: "请输入图片标题" }]}
+        label="内容标题"
+        rules={[{ required: true, message: "请输入内容标题" }]}
       >
-        <Input placeholder="请输入收藏图片标题" />
+        <Input placeholder="请输入图片或视频标题" />
       </Form.Item>
 
       <Form.Item name="tags" label="标签">
@@ -314,6 +375,104 @@ const ImageEditorForm = forwardRef<ImageEditorFormRef, ImageEditorFormProps>(fun
 
         <Form.Item name="isFeatured" label="首页推荐" valuePropName="checked">
           <Switch checkedChildren="推荐" unCheckedChildren="普通" />
+        </Form.Item>
+      </div>
+    </Form>
+  );
+});
+
+/** 根据提示词生成一个适合后台继续编辑的默认标题。 */
+function buildGeneratedImageTitle(title: string, prompt: string) {
+  const trimmedTitle = title.trim();
+  if (trimmedTitle) {
+    return trimmedTitle;
+  }
+
+  const normalizedPrompt = prompt.replace(/\s+/g, " ").trim();
+  return normalizedPrompt.slice(0, 24) || "AI 生成图片";
+}
+
+/** 渲染 AI 图片生成弹框内容。 */
+const GenerateImageForm = forwardRef<GenerateImageFormRef>(function GenerateImageForm(_, ref) {
+  const [form] = Form.useForm<GenerateImageFormValues>();
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      async submit() {
+        const values = await form.validateFields();
+        return {
+          title: values.title.trim(),
+          prompt: values.prompt.trim(),
+          size: values.size,
+          quality: values.quality,
+          background: values.background,
+        };
+      },
+    }),
+    [form],
+  );
+
+  return (
+    <Form<GenerateImageFormValues>
+      form={form}
+      layout="vertical"
+      requiredMark={false}
+      initialValues={{
+        title: "",
+        prompt: "",
+        size: "1024x1024",
+        quality: "auto",
+        background: "auto",
+      }}
+      className="pt-2"
+    >
+      <div className="mb-5 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+        当前接口会显式调用 <span className="font-semibold">gpt-image-2</span>，生成结果会先上传到现有 Supabase Storage，再进入图片新增流程。
+      </div>
+
+      <Form.Item name="title" label="图片标题">
+        <Input placeholder="可选，不填时会根据提示词自动生成标题" />
+      </Form.Item>
+
+      <Form.Item
+        name="prompt"
+        label="提示词"
+        rules={[{ required: true, message: "请输入图片提示词" }]}
+      >
+        <Input.TextArea rows={5} placeholder="例如：一张胶片感的夏日海边照片，阳光、浪花、浅蓝天空，构图干净" />
+      </Form.Item>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Form.Item name="size" label="尺寸">
+          <Select
+            options={[
+              { value: "1024x1024", label: "1024 × 1024" },
+              { value: "1536x1024", label: "1536 × 1024" },
+              { value: "1024x1536", label: "1024 × 1536" },
+            ]}
+          />
+        </Form.Item>
+
+        <Form.Item name="quality" label="质量">
+          <Select
+            options={[
+              { value: "auto", label: "自动" },
+              { value: "high", label: "高" },
+              { value: "medium", label: "中" },
+              { value: "low", label: "低" },
+            ]}
+          />
+        </Form.Item>
+
+        <Form.Item name="background" label="背景">
+          <Select
+            options={[
+              { value: "auto", label: "自动" },
+              { value: "opaque", label: "不透明" },
+              { value: "transparent", label: "透明" },
+            ]}
+          />
         </Form.Item>
       </div>
     </Form>
@@ -454,6 +613,15 @@ function renderFeaturedTag(isFeatured: boolean) {
   return <Tag>普通</Tag>;
 }
 
+/** 渲染媒体类型标签。 */
+function renderMediaTypeTag(mediaType: MediaType) {
+  if (mediaType === "video") {
+    return <Tag color="purple">视频</Tag>;
+  }
+
+  return <Tag color="gold">图片</Tag>;
+}
+
 /** 根据弹框模式提交创建或更新请求。 */
 async function saveImageEditorResult(result: ImageEditorSubmitResult) {
   const imageUrl = result.file ? await uploadImageFile(result.file) : result.values.imageUrl;
@@ -475,10 +643,13 @@ export function ImageManager() {
   const tableRef = useRef<ApiTableRef>(null);
   const modalRef = useRef<RefModalRef<ImageModalData>>(null);
   const tagModalRef = useRef<RefModalRef>(null);
+  const generateModalRef = useRef<RefModalRef>(null);
   const editorFormRef = useRef<ImageEditorFormRef>(null);
+  const generateFormRef = useRef<GenerateImageFormRef>(null);
   const [imageTags, setImageTags] = useState<ImageTagItem[]>([]);
   const [saving, setSaving] = useState(false);
   const [tagLoading, setTagLoading] = useState(false);
+  const [generating, setGenerating] = useState(false);
 
   const reloadImageTags = useCallback(async () => {
     try {
@@ -515,12 +686,15 @@ export function ImageManager() {
   const columns = useMemo<TableColumnsType<ImageManagerRow>>(
     () => [
       {
-        title: "图片标题",
+        title: "内容标题",
         dataIndex: "title",
         key: "title",
         render: (_, record) => (
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-slate-900">{record.title}</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="truncate text-sm font-semibold text-slate-900">{record.title}</p>
+              {renderMediaTypeTag(record.mediaType)}
+            </div>
             <div className="mt-1 flex flex-wrap gap-1.5">
               {record.tags.length ? (
                 record.tags.map((tag) => (
@@ -562,14 +736,14 @@ export function ImageManager() {
         width: 180,
         render: (_, record) => (
           <Space size={6}>
-            <Button
-              type="link"
-              className="px-1"
-              onClick={() => {
-                modalRef.current?.open("编辑收藏", { ...record, mode: "edit" });
-              }}
-            >
-              修改
+              <Button
+                type="link"
+                className="px-1"
+                onClick={() => {
+                  modalRef.current?.open("编辑内容", { ...record, mode: "edit" });
+                }}
+              >
+                修改
             </Button>
             <Popconfirm
               title="确认删除这张图片？"
@@ -602,16 +776,26 @@ export function ImageManager() {
       <section className="rounded-2xl border border-slate-200 bg-white p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">图片管理</h2>
-            <p className="mt-1 text-sm text-slate-500">维护个人收藏站的图片内容、标签和展示优先级。</p>
+            <h2 className="text-lg font-semibold text-slate-900">媒体管理</h2>
+            <p className="mt-1 text-sm text-slate-500">维护个人收藏站的图片、短视频、标签和展示优先级。</p>
           </div>
-          <Button
-            onClick={() => {
-              tagModalRef.current?.open("标签管理");
-            }}
-          >
-            标签管理
-          </Button>
+          <Space>
+            <Button
+              type="primary"
+              onClick={() => {
+                generateModalRef.current?.open("AI 生成图片");
+              }}
+            >
+              AI 生成（gpt-image-2）
+            </Button>
+            <Button
+              onClick={() => {
+                tagModalRef.current?.open("标签管理");
+              }}
+            >
+              标签管理
+            </Button>
+          </Space>
         </div>
       </section>
 
@@ -621,7 +805,7 @@ export function ImageManager() {
           api="/api/admin/images"
           columns={columns}
           rowKey="id"
-          title="图片列表"
+          title="媒体列表"
           transform={(response) => {
             const rows = decorateImageRows(response.data ?? []);
             return { list: rows, total: rows.length };
@@ -630,10 +814,10 @@ export function ImageManager() {
             <Button
               type="primary"
               onClick={() => {
-                modalRef.current?.open("新增收藏", { mode: "create" });
+                modalRef.current?.open("新增内容", { mode: "create" });
               }}
             >
-              新增收藏
+              新增内容
             </Button>
           )}
         />
@@ -655,7 +839,7 @@ export function ImageManager() {
             }
 
             await saveImageEditorResult(result);
-            toast.success(result.data.mode === "edit" ? "图片已更新" : "图片已新增");
+            toast.success(result.data.mode === "edit" ? "内容已更新" : "内容已新增");
             modalRef.current?.close();
             tableRef.current?.reload();
           } catch (error) {
@@ -666,6 +850,45 @@ export function ImageManager() {
         }}
       >
         {(data) => <ImageEditorForm ref={editorFormRef} key={data.id ?? data.mode ?? "create"} data={data} imageTags={imageTags} />}
+      </RefModal>
+
+      <RefModal
+        ref={generateModalRef}
+        width={680}
+        destroyOnHidden
+        okText="开始生成"
+        cancelText="取消"
+        confirmLoading={generating}
+        onOk={async () => {
+          try {
+            setGenerating(true);
+            const values = await generateFormRef.current?.submit();
+            if (!values) {
+              return;
+            }
+
+            const generated = await generateImageWithAi({
+              prompt: values.prompt,
+              size: values.size,
+              quality: values.quality,
+              background: values.background,
+            });
+
+            generateModalRef.current?.close();
+            modalRef.current?.open("新增 AI 图片", {
+              mode: "create",
+              title: buildGeneratedImageTitle(values.title, generated.revisedPrompt),
+              imageUrl: generated.imageUrl,
+            });
+            toast.success(`AI 图片已生成，当前模型：${generated.model}`);
+          } catch (error) {
+            toast.error(error, "AI 图片生成失败");
+          } finally {
+            setGenerating(false);
+          }
+        }}
+      >
+        {() => <GenerateImageForm ref={generateFormRef} />}
       </RefModal>
 
       <RefModal

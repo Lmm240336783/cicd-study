@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { connection } from "next/server";
+import { CollectionEmptyState } from "@/components/site/CollectionEmptyState";
 import { listPublicImages } from "@/lib/server/content/store";
 import styles from "@/components/site/site-visuals.module.scss";
 import { cn } from "@/lib/utils/cn";
@@ -35,11 +36,22 @@ export default async function PublicImagesPage() {
   await connection();
 
   const images = await listPublicImages();
+  const isImagesEmpty = images.length === 0;
 
   return (
     <div className="mx-auto w-full max-w-[92rem] px-4 pb-12 pt-6 md:px-6 md:pb-16">
       <section className={cn(styles.surfacePanel, "overflow-hidden rounded-[30px] p-3 md:p-4")}>
-        <header className={cn(styles.listHeader, "rounded-[22px] px-5 py-4")}>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 px-1">
+          <div>
+            <h1 className="text-3xl font-black text-slate-900">图片馆</h1>
+            <p className="mt-1 text-sm text-[#705e34]">浏览单张图片，也可以按主题进入合集。</p>
+          </div>
+          <Link href="/images/albums" className="rounded-full bg-[#fff5ca] px-4 py-2 text-sm font-black text-[#795c19] transition hover:bg-[#ffe777]">
+            查看合集
+          </Link>
+        </div>
+
+        {/* <header className={cn(styles.listHeader, "rounded-[22px] px-5 py-4")}>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h1 className="text-3xl font-black text-slate-900">图片馆</h1>
@@ -60,36 +72,44 @@ export default async function PublicImagesPage() {
             <span className={cn(styles.mutedChip, "px-3 py-1")}>按评分</span>
             <span className={cn(styles.activeChip, "px-3 py-1 text-slate-900")}>按更新时间</span>
           </div>
-        </div>
+        </div> */}
 
-        <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {images.map((item, index) => (
-            <article
-              key={item.id}
-              className={cn(styles.shelfCard, "group overflow-hidden rounded-[16px] bg-[#fff9e8]")}
-            >
-              <Link href={`/images/${item.id}`} className="block cursor-pointer">
-                <div
-                  className={cn(styles.mediaCardPlain, "w-full transition duration-300 group-hover:scale-[1.02]")}
-                  style={{
-                    ...imageCoverStyle(item.imageUrl, index),
-                    height: `${imageCardHeight(index)}px`,
-                  }}
-                />
-                <div className="space-y-2 p-3">
-                  <h2 className="font-semibold text-slate-900">{item.title}</h2>
-                  <p className="line-clamp-2 text-sm text-slate-600">{item.description}</p>
-                  <p className="text-xs leading-5 text-slate-500">收藏标签：{item.tags.join(" · ")}</p>
-                </div>
-              </Link>
-              <div className="px-3 pb-3">
-                <a href={item.imageUrl} target="_blank" rel="noreferrer" className="inline-block text-xs font-semibold text-[#9f4ddb] transition hover:text-[#8740be]">
-                  查看原图链接
-                </a>
-              </div>
-            </article>
-          ))}
-        </div>
+        {isImagesEmpty ? (
+          <CollectionEmptyState
+            eyebrow="公开图片"
+            title="图片馆正在布置中"
+            description="图片展位暂时还没有公开内容，等新图上墙后就会出现在这里。"
+          />
+        ) : (
+          <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {images.map((item, index) => (
+              <article
+                key={item.id}
+                className={cn(styles.shelfCard, "group overflow-hidden rounded-[16px] bg-[#fff9e8]")}
+              >
+                <Link href={`/images/${item.id}`} className="block cursor-pointer">
+                  <div
+                    className={cn(styles.mediaCardPlain, "w-full transition duration-300 group-hover:scale-[1.02]")}
+                    style={{
+                      ...imageCoverStyle(item.imageUrl, index),
+                      height: `${imageCardHeight(index)}px`,
+                    }}
+                  />
+                  <div className="space-y-2 p-3">
+                    <h2 className="font-semibold text-slate-900">{item.title}</h2>
+                    <p className="line-clamp-2 text-sm text-slate-600">{item.description}</p>
+                    <p className="text-xs leading-5 text-slate-500">收藏标签：{item.tags.join(" · ")}</p>
+                  </div>
+                </Link>
+                {/* <div className="px-3 pb-3">
+                  <a href={item.imageUrl} target="_blank" rel="noreferrer" className="inline-block text-xs font-semibold text-[#9f4ddb] transition hover:text-[#8740be]">
+                    查看原图链接
+                  </a>
+                </div> */}
+              </article>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );

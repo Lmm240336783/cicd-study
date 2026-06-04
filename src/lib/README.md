@@ -15,7 +15,7 @@
 | `dashboard` | 仪表盘展示数据或临时 mock 数据。 | `mock.ts` |
 | `server/auth` | 服务端鉴权、会话 Cookie、请求解析和 Supabase Auth 业务封装。 | `cookie.ts`、`request.ts`、`session.ts`、`supabase.ts` |
 | `server/supabase` | Supabase 底层客户端工厂和 public/admin client 出口。 | `core.ts`、`public.ts`、`admin.ts` |
-| `server/content` | 图片和电视剧内容数据访问、字段转换和内容兜底数据。 | `store.ts`、`records.ts`、`fallback.ts` |
+| `server/content` | 图片、图片合集和电视剧内容数据访问、字段转换和内容兜底数据。 | `store.ts`、`records.ts`、`image-album-payloads.ts`、`fallback.ts` |
 
 ## 文件职责
 
@@ -42,8 +42,9 @@
 | `server/supabase/core.ts` | Supabase 底层公共工厂，负责读取环境变量、创建客户端和生成标准表操作。 |
 | `server/supabase/public.ts` | 官网只读场景的 Supabase public client 出口，使用 `SUPABASE_KEY`。 |
 | `server/supabase/admin.ts` | 后台管理场景的 Supabase admin client 出口，使用 `SUPABASE_SECRET_KEY`。 |
-| `server/content/store.ts` | 图片和电视剧内容数据访问层，负责公开列表、后台列表、精选、新增、更新、删除。 |
+| `server/content/store.ts` | 图片、图片合集和电视剧内容数据访问层，负责公开列表、后台列表、精选、新增、更新、删除。 |
 | `server/content/records.ts` | Supabase snake_case 记录和前端 camelCase 模型之间的类型与字段转换。 |
+| `server/content/image-album-payloads.ts` | 图片合集后台创建、更新请求体的基础校验和字段归一化。 |
 | `server/content/fallback.ts` | 内容表缺失时的兜底展示数据，供 `server/content/store.ts` 使用。 |
 
 ## 职责边界

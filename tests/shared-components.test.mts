@@ -138,3 +138,12 @@ test("renders quick auth recovery actions near login errors", () => {
   assert.match(source, /忘记密码/);
   assert.match(source, /去注册/);
 });
+
+test("renders the site collection empty state with booth illustration assets", () => {
+  const source = readFileSync("src/components/site/CollectionEmptyState.tsx", "utf8");
+
+  assert.match(source, /emptyStateBooth/);
+  assert.match(source, /\/exports\/yun1\.png/);
+  assert.match(source, /\/exports\/pinkxx\.png/);
+  assert.match(source, /先去首页逛逛/);
+});

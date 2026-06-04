@@ -28,6 +28,9 @@ test("music list page links songs and singers", () => {
 
   assert.match(source, /listPublicMusic/);
   assert.match(source, /listFeaturedSingers/);
+  assert.match(source, /CollectionEmptyState/);
+  assert.match(source, /music\.length === 0 && featuredSingers\.length === 0/);
+  assert.match(source, /公开歌单正在补货中/);
   assert.match(source, /\/music\/\$\{item\.id\}/);
   assert.match(source, /\/music\/singers\/\$\{item\.id\}/);
   assert.match(source, /music-grid/);

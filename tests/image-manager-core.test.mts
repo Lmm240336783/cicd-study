@@ -17,6 +17,7 @@ test("decorates image rows without adding fake priority fields", () => {
         title: "封面 1",
         description: "",
         imageUrl: "https://example.com/1.jpg",
+        mediaType: "image",
         tags: [],
         isFeatured: false,
         status: "draft",
@@ -28,6 +29,7 @@ test("decorates image rows without adding fake priority fields", () => {
         title: "封面 2",
         description: "",
         imageUrl: "https://example.com/2.jpg",
+        mediaType: "image",
         tags: ["旅行"],
         isFeatured: true,
         status: "published",
@@ -41,6 +43,7 @@ test("decorates image rows without adding fake priority fields", () => {
         title: "封面 1",
         description: "",
         imageUrl: "https://example.com/1.jpg",
+        mediaType: "image",
         tags: [],
         isFeatured: false,
         status: "draft",
@@ -52,6 +55,7 @@ test("decorates image rows without adding fake priority fields", () => {
         title: "封面 2",
         description: "",
         imageUrl: "https://example.com/2.jpg",
+        mediaType: "image",
         tags: ["旅行"],
         isFeatured: true,
         status: "published",
@@ -80,6 +84,7 @@ test("builds image form values from a selected row", () => {
       title: "海边日落",
       description: "",
       imageUrl: "https://example.com/sunset.jpg",
+      mediaType: "image",
       tags: ["旅行", "自然"],
       isFeatured: true,
       status: "published",
@@ -189,6 +194,6 @@ test("requestJson falls back to a readable error when the response body is empty
 test("renders a current image preview inside the image editor modal", () => {
   const source = readFileSync("src/components/admin/ImageManager.tsx", "utf8");
 
-  assert.match(source, /当前图片预览/);
+  assert.match(source, /当前媒体预览/);
   assert.match(source, /previewUrl/);
 });

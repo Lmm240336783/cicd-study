@@ -40,6 +40,12 @@ export const adminMenuGroups: AdminMenuGroup[] = [
         label: "图片管理",
         description: "管理图片收藏的新增、编辑、删除、推荐和发布状态。",
       },
+      {
+        key: "admin-image-albums",
+        path: "/admin/images/albums",
+        label: "合集管理",
+        description: "管理图片合集的标题、图片顺序和发布状态。",
+      },
     ],
   },
   {
