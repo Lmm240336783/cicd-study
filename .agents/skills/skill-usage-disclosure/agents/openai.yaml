@@ -1,0 +1,4 @@
+interface:
+  display_name: "Skill Usage Disclosure"
+  short_description: "启用项目 skill 时简短说明使用了哪些以及原因。"
+  default_prompt: "说明本次启用了哪些项目 skill 以及原因。"

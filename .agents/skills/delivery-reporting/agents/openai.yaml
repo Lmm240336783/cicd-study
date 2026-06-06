@@ -1,0 +1,4 @@
+interface:
+  display_name: "Delivery Reporting"
+  short_description: "规范阶段汇报、项目文档同步和最终交付说明。"
+  default_prompt: "汇报本次完成、影响范围、验证和文档同步情况。"

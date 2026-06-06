@@ -1,0 +1,4 @@
+interface:
+  display_name: "Task Completion Guard"
+  short_description: "防止多步骤任务停在计划、半成品或未验证状态。"
+  default_prompt: "检查当前任务是否真正完成并完成必要验证。"

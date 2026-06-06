@@ -1,0 +1,4 @@
+interface:
+  display_name: "Component Reuse Guard"
+  short_description: "判断重复组件、JSX 和 handler 是否应复用或抽取。"
+  default_prompt: "检查本次前端改动是否存在可复用组件或重复逻辑。"

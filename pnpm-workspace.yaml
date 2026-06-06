@@ -1,3 +1,28 @@
+packages:
+  - "apps/*"
+
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver
+onlyBuiltDependencies:
+  - '@ladybugdb/core'
+  - '@parcel/watcher'
+  - '@scarf/scarf'
+  - esbuild
+  - lefthook
+  - onnxruntime-node
+  - protobufjs
+  - tos-crc64-js
+  - tree-sitter
+  - tree-sitter-c
+  - tree-sitter-c-sharp
+  - tree-sitter-cpp
+  - tree-sitter-go
+  - tree-sitter-java
+  - tree-sitter-javascript
+  - tree-sitter-kotlin
+  - tree-sitter-php
+  - tree-sitter-python
+  - tree-sitter-ruby
+  - tree-sitter-rust
+  - tree-sitter-typescript
