@@ -21,6 +21,7 @@
     "test:web": "turbo run test --filter=web",
     "typecheck:coin-pusher": "turbo run typecheck --filter=neon-coin-rush",
     "test:coin-pusher": "turbo run test --filter=neon-coin-rush",
+    "test:coin-pusher:web-game": "pnpm --dir apps/coin-pusher test:web-game",
     "typecheck:all": "turbo run typecheck",
     "test:all": "turbo run test",
     "prepare": "lefthook install -f"

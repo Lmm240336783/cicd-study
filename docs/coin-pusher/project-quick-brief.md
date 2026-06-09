@@ -65,6 +65,7 @@
 - `pnpm typecheck:coin-pusher`
 - `pnpm test:coin-pusher`
 - `pnpm build:coin-pusher`
+- `pnpm test:coin-pusher:web-game -- --url http://127.0.0.1:5173/ --click-selector ".mode-card.primary" --actions-file .codex/skills/develop-web-game/references/action_payloads.json`
 
 ## 风险点
 

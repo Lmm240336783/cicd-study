@@ -11,22 +11,9 @@ type DieItem = {
   cornerAssistCooldown: number;
   cornerAssistAttempts: number;
   airborneElapsed: number;
+  airborneRecoveryCooldown: number;
   debugLastY: number;
   debugLastLinearY: number;
-  correctionMotion?: {
-    mode: 'drop' | 'roll';
-    angle: number;
-    startPosition: THREE.Vector3;
-    targetPosition: THREE.Vector3;
-    startQuaternion: THREE.Quaternion;
-    targetQuaternion: THREE.Quaternion;
-    pivotLocal?: THREE.Vector3;
-    pivotWorld?: THREE.Vector3;
-    sinkDepth: number;
-    reboundHeight: number;
-    elapsed: number;
-    duration: number;
-  };
 };
 
 type DiceAssistDebugEvent = {
@@ -110,6 +97,7 @@ type DicePoseDebugState = {
   hasTrayContact: boolean;
   hasStackSupport: boolean;
   isCornerStanding: boolean;
+  isFinalPoseInvalid: boolean;
   isNearGroundCornerStand: boolean;
   isUnsupportedAirborne: boolean;
 };
@@ -128,9 +116,10 @@ type DiceRollerSceneOptions = {
 
 const DIE_SIZE = 0.62;
 const DIE_HALF_SIZE = DIE_SIZE / 2;
+const DIE_COLLIDER_HALF_SIZE = DIE_HALF_SIZE * 0.98;
 const TRAY_RADIUS = 2.65;
 const TRAY_INNER_RADIUS = TRAY_RADIUS - 0.42;
-const DIE_SPAWN_RADIUS = 0.92;
+const DIE_SPAWN_RADIUS = 1.18;
 const DIE_SPAWN_BASE_Y = 0.78;
 const DIE_SPAWN_STEP_Y = 0.05;
 const WALL_RING_RADIUS = TRAY_INNER_RADIUS - 0.14;
@@ -138,6 +127,7 @@ const WALL_CENTER_Y = 1.02;
 const WALL_HALF_WIDTH = 0.26;
 const WALL_HALF_HEIGHT = 1.9;
 const WALL_HALF_DEPTH = 0.32;
+const WALL_FRICTION = 0.02;
 const WALL_ESCAPE_RADIUS = WALL_RING_RADIUS - DIE_HALF_SIZE * 0.42;
 const WALL_ESCAPE_MIN_Y = 1.1;
 const COVER_CLOSED_Y = 1.35;
@@ -147,19 +137,19 @@ const TRAY_TOP_Y = 0.06;
 const COLLISION_SOUND_COOLDOWN = 90;
 const SLEEP_FALLBACK_SECONDS = 0.72;
 const MAX_DIE_CENTER_HEIGHT = 2.52;
-const MIN_DIE_CENTER_HEIGHT = DIE_HALF_SIZE + 0.08;
+const MIN_DIE_CENTER_HEIGHT = TRAY_TOP_Y + DIE_COLLIDER_HALF_SIZE;
+const BOUNDS_MIN_DIE_CENTER_HEIGHT = MIN_DIE_CENTER_HEIGHT - 0.018;
 const DIE_SUPPORT_OFFSET = MIN_DIE_CENTER_HEIGHT - TRAY_TOP_Y;
 const STACKED_REST_CENTER_DISTANCE = DIE_SUPPORT_OFFSET * 2;
 const VISUAL_SETTLE_DELAY_SECONDS = 0.22;
 const VISUAL_STILL_SECONDS = 0.12;
 const VISUAL_LINEAR_SPEED = 0.18;
 const VISUAL_ANGULAR_SPEED = 0.22;
-const CORRECTION_MOTION_MIN_SECONDS = 0.16;
-const CORRECTION_MOTION_MAX_SECONDS = 0.3;
 const SETTLE_LINEAR_SPEED = 0.08;
 const SETTLE_ANGULAR_SPEED = 0.12;
 const CORNER_STAND_FACE_DOT = 0.965;
-const CORNER_STAND_HEIGHT_SLACK = 0.18;
+const FINAL_FACE_DOT = 0.985;
+const CORNER_STAND_HEIGHT_SLACK = 0.3;
 const STACK_SUPPORT_VERTICAL_MIN = DIE_SIZE * 0.52;
 const STACK_SUPPORT_VERTICAL_MAX = DIE_SIZE * 1.08;
 const STACK_SUPPORT_OVERLAP_RATIO = 0.7;
@@ -171,12 +161,20 @@ const CORNER_STAND_SNAP_LINEAR_SPEED = 0.06;
 const CORNER_STAND_SNAP_ANGULAR_SPEED = 0.08;
 const CORNER_ASSIST_COOLDOWN_SECONDS = 0.2;
 const CORNER_ASSIST_MAX_ATTEMPTS = 5;
+const FINAL_POSE_RECOVERY_ATTEMPTS = 4;
 const CORNER_ASSIST_UPWARD_IMPULSE_MIN = 0.001;
 const CORNER_ASSIST_UPWARD_IMPULSE_MAX = 0.003;
 const CORNER_ASSIST_LATERAL_IMPULSE_MIN = 0.005;
-const CORNER_ASSIST_LATERAL_IMPULSE_MAX = 0.04;
+const CORNER_ASSIST_LATERAL_IMPULSE_MAX = 0.026;
 const CORNER_ASSIST_TORQUE_IMPULSE_MIN = 0.012;
-const CORNER_ASSIST_TORQUE_IMPULSE_MAX = 0.11;
+const CORNER_ASSIST_TORQUE_IMPULSE_MAX = 0.08;
+const AIRBORNE_RECOVERY_CONFIRM_SECONDS = 0.18;
+const AIRBORNE_RECOVERY_COOLDOWN_SECONDS = 0.1;
+const AIRBORNE_RECOVERY_MAX_LINEAR_SPEED = 0.55;
+const AIRBORNE_RECOVERY_DOWNWARD_SPEED = 1.05;
+const AIRBORNE_RECOVERY_LATERAL_SPEED = 0.46;
+const AIRBORNE_RECOVERY_TORQUE_IMPULSE = 0.08;
+const AIRBORNE_STACK_RECOVERY_DOWNWARD_SPEED = 0.34;
 const REST_HEIGHT_SNAP_SLACK = 0.06;
 const RIGHT_ANGLE = Math.PI / 2;
 const DICE_DEBUG_STORAGE_KEY = 'coin-pusher:dice-debug';
@@ -215,10 +213,38 @@ const PIP_PATTERNS: Record<number, Array<[number, number]>> = {
 
 const CUBE_ORIENTATIONS = createCubeOrientations();
 
-const randomInTray = () => {
-  const angle = Math.random() * Math.PI * 2;
-  const radius = Math.sqrt(Math.random()) * DIE_SPAWN_RADIUS;
+const randomInTray = (index = 0, count = 1) => {
+  const spreadAngle = count > 1 ? (index / count) * Math.PI * 2 : Math.random() * Math.PI * 2;
+  const angle = spreadAngle + (Math.random() - 0.5) * 0.48;
+  const radius = THREE.MathUtils.lerp(DIE_SPAWN_RADIUS * 0.48, DIE_SPAWN_RADIUS, Math.random());
   return { x: Math.cos(angle) * radius, z: Math.sin(angle) * radius };
+};
+
+const randomTossStartQuaternion = () => {
+  const base = CUBE_ORIENTATIONS[Math.floor(Math.random() * CUBE_ORIENTATIONS.length)].clone();
+  const yaw = new THREE.Quaternion().setFromAxisAngle(WORLD_UP, Math.random() * Math.PI * 2);
+  const tiltAngle = Math.random() * 0.16;
+  const tiltAxisAngle = Math.random() * Math.PI * 2;
+  const tiltAxis = new THREE.Vector3(Math.cos(tiltAxisAngle), 0, Math.sin(tiltAxisAngle));
+  const tilt = new THREE.Quaternion().setFromAxisAngle(tiltAxis, tiltAngle);
+
+  return tilt.multiply(yaw).multiply(base).normalize();
+};
+
+const randomHorizontalImpulse = () => {
+  const angle = Math.random() * Math.PI * 2;
+  const magnitude = THREE.MathUtils.lerp(0.46, 0.72, Math.random());
+  return { x: Math.cos(angle) * magnitude, z: Math.sin(angle) * magnitude };
+};
+
+const randomTorqueImpulse = () => {
+  const angle = Math.random() * Math.PI * 2;
+  const tumble = THREE.MathUtils.lerp(1.05, 1.48, Math.random());
+  return {
+    x: Math.cos(angle) * tumble,
+    y: (Math.random() - 0.5) * 1.18,
+    z: Math.sin(angle) * tumble,
+  };
 };
 
 function createCubeOrientations() {
@@ -245,16 +271,6 @@ function createCubeOrientations() {
   }
 
   return orientations;
-}
-
-function easeInOutCubic(value: number) {
-  return value < 0.5
-    ? 4 * value * value * value
-    : 1 - ((-2 * value + 2) ** 3) / 2;
-}
-
-function easeOutQuint(value: number) {
-  return 1 - ((1 - value) ** 5);
 }
 
 function clamp01(value: number) {
@@ -373,16 +389,18 @@ export class DiceRollerScene {
       this.removeDie(index);
       this.addDie(index, false);
       const nextDie = this.dice[index];
+      const horizontalImpulse = randomHorizontalImpulse();
+      const torqueImpulse = randomTorqueImpulse();
       nextDie.body.wakeUp();
       nextDie.body.applyImpulse({
-        x: (Math.random() - 0.5) * 1.05,
-        y: 0.22 + Math.random() * 0.08,
-        z: (Math.random() - 0.5) * 1.05,
+        x: horizontalImpulse.x,
+        y: 0.24 + Math.random() * 0.08,
+        z: horizontalImpulse.z,
       }, true);
       nextDie.body.applyTorqueImpulse({
-        x: (Math.random() - 0.5) * 1.6,
-        y: (Math.random() - 0.5) * 1.9,
-        z: (Math.random() - 0.5) * 1.6,
+        x: torqueImpulse.x,
+        y: torqueImpulse.y,
+        z: torqueImpulse.z,
       }, true);
     }
   }
@@ -474,8 +492,9 @@ export class DiceRollerScene {
       this.world.createCollider(
         // Keep the tray wall top above normal dice motion so dice cannot balance on a narrow wall edge.
         RAPIER.ColliderDesc.cuboid(WALL_HALF_WIDTH, WALL_HALF_HEIGHT, WALL_HALF_DEPTH)
-          .setFriction(0.9)
+          .setFriction(WALL_FRICTION)
           .setRestitution(0.05)
+          .setSensor(true)
           .setActiveEvents(RAPIER.ActiveEvents.CONTACT_FORCE_EVENTS)
           .setContactForceEventThreshold(4.2),
         body,
@@ -500,10 +519,10 @@ export class DiceRollerScene {
   private addDie(index: number, locked: boolean) {
     if (!this.world) return;
 
-    const spawn = randomInTray();
+    const spawn = randomInTray(index, this.diceCount);
     const group = this.createDieMesh();
     group.position.set(spawn.x, DIE_SPAWN_BASE_Y + index * DIE_SPAWN_STEP_Y, spawn.z);
-    group.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+    group.quaternion.copy(randomTossStartQuaternion());
     this.scene.add(group);
 
     const bodyDesc = locked ? RAPIER.RigidBodyDesc.fixed() : RAPIER.RigidBodyDesc.dynamic();
@@ -516,8 +535,8 @@ export class DiceRollerScene {
           z: group.quaternion.z,
           w: group.quaternion.w,
         })
-        .setLinearDamping(0.34)
-        .setAngularDamping(0.52)
+        .setLinearDamping(0.42)
+        .setAngularDamping(0.56)
         .setCcdEnabled(true)
         .setCanSleep(true),
     );
@@ -534,9 +553,9 @@ export class DiceRollerScene {
       cornerAssistCooldown: 0,
       cornerAssistAttempts: 0,
       airborneElapsed: 0,
+      airborneRecoveryCooldown: 0,
       debugLastY: group.position.y,
       debugLastLinearY: 0,
-      correctionMotion: undefined,
     });
   }
 
@@ -561,8 +580,8 @@ export class DiceRollerScene {
       bodyDesc
         .setTranslation(position.x, position.y, position.z)
         .setRotation(rotation)
-        .setLinearDamping(0.34)
-        .setAngularDamping(0.52)
+        .setLinearDamping(0.42)
+        .setAngularDamping(0.56)
         .setCcdEnabled(true)
         .setCanSleep(true),
     );
@@ -575,18 +594,18 @@ export class DiceRollerScene {
     die.cornerAssistCooldown = 0;
     die.cornerAssistAttempts = 0;
     die.airborneElapsed = 0;
+    die.airborneRecoveryCooldown = 0;
     die.debugLastY = position.y;
     die.debugLastLinearY = 0;
-    die.correctionMotion = undefined;
   }
 
   private createDieCollider(body: RAPIER.RigidBody) {
     if (!this.world) throw new Error('Physics world is not initialized.');
 
     return this.world.createCollider(
-      RAPIER.ColliderDesc.roundCuboid(DIE_HALF_SIZE, DIE_HALF_SIZE, DIE_HALF_SIZE, 0.04)
-        .setFriction(0.88)
-        .setRestitution(0.1)
+      RAPIER.ColliderDesc.cuboid(DIE_COLLIDER_HALF_SIZE, DIE_COLLIDER_HALF_SIZE, DIE_COLLIDER_HALF_SIZE)
+        .setFriction(0.58)
+        .setRestitution(0.06)
         .setActiveEvents(RAPIER.ActiveEvents.CONTACT_FORCE_EVENTS)
         .setContactForceEventThreshold(3.2),
       body,
@@ -652,7 +671,6 @@ export class DiceRollerScene {
     this.world.timestep = delta;
     this.world.step(this.eventQueue);
     this.handleContactForces();
-    this.updateCorrectionMotions(delta);
     this.keepDiceInsideBounds();
     this.syncDice();
     this.recordPhysicsBounceDebug();
@@ -671,76 +689,11 @@ export class DiceRollerScene {
   }
 
   // 结算纠偏按帧推进物理体，让骰子自己滑落到稳定面，而不是瞬移到目标姿态。
-  private updateCorrectionMotions(delta: number) {
-    this.dice.forEach((die) => {
-      const motion = die.correctionMotion;
-      if (!motion) return;
-
-      motion.elapsed = Math.min(motion.duration, motion.elapsed + delta);
-      const progress = THREE.MathUtils.clamp(motion.elapsed / motion.duration, 0, 1);
-      const rotationProgress = motion.mode === 'roll'
-        ? easeInOutCubic(progress)
-        : easeOutQuint(progress);
-      const translationProgress = motion.mode === 'roll'
-        ? easeOutQuint(Math.max(0, (progress - 0.08) / 0.92))
-        : easeInOutCubic(progress);
-      const nextQuaternion = motion.startQuaternion.clone().slerp(
-        motion.targetQuaternion,
-        rotationProgress,
-      );
-      const verticalOffset = this.getCorrectionVerticalOffset(motion, progress);
-      const nextPosition = motion.mode === 'roll' && motion.pivotLocal && motion.pivotWorld
-        ? motion.pivotWorld.clone()
-          .sub(motion.pivotLocal.clone().applyQuaternion(nextQuaternion))
-          .add(new THREE.Vector3(0, verticalOffset, 0))
-        : new THREE.Vector3().lerpVectors(
-          motion.startPosition,
-          motion.targetPosition,
-          translationProgress,
-        ).add(new THREE.Vector3(0, verticalOffset, 0));
-      nextPosition.y = Math.max(MIN_DIE_CENTER_HEIGHT, nextPosition.y);
-
-      die.body.wakeUp();
-      die.body.setTranslation(nextPosition, true);
-      die.body.setRotation(nextQuaternion, true);
-      die.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
-      die.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
-
-      if (progress >= 1) {
-        die.correctionMotion = undefined;
-        die.body.sleep();
-      }
-    });
-  }
-
-  // 给纠偏过程加入轻微下沉和小回弹，让落稳更像受重接触而不是纯几何复位。
-  private getCorrectionVerticalOffset(
-    motion: NonNullable<DieItem['correctionMotion']>,
-    progress: number,
-  ) {
-    if (motion.mode !== 'roll') return 0;
-
-    if (progress < 0.52) {
-      const local = easeOutQuint(clamp01(progress / 0.52));
-      return -motion.sinkDepth * local;
-    }
-
-    if (progress < 0.82) {
-      const local = easeInOutCubic(clamp01((progress - 0.52) / 0.3));
-      return THREE.MathUtils.lerp(-motion.sinkDepth, motion.reboundHeight, local);
-    }
-
-    const local = easeOutQuint(clamp01((progress - 0.82) / 0.18));
-    return THREE.MathUtils.lerp(motion.reboundHeight, 0, local);
-  }
-
   private checkSettled(delta: number) {
     if (!this.rolling) return;
 
     this.rollingElapsed += delta;
     this.updateRestabilizationTimers(delta);
-    const hasActiveCorrections = this.dice.some((die) => !die.locked && die.correctionMotion);
-    if (hasActiveCorrections) return;
     const allSleeping = this.dice.every((die) => die.locked || die.body.isSleeping());
     if (allSleeping) {
       if (!this.areDiceStructurallyStable() && !this.forceSettleUnsupportedDice()) return;
@@ -816,12 +769,14 @@ export class DiceRollerScene {
 
     for (const die of this.dice) {
       if (die.locked) continue;
+      if (die.body.isSleeping()) continue;
 
       const position = die.body.translation();
       const radial = Math.hypot(position.x, position.z);
       const nextPosition = { x: position.x, y: position.y, z: position.z };
       const nextLinearVelocity = die.body.linvel();
       const nextAngularVelocity = die.body.angvel();
+      const wakeOnCorrection = !die.body.isSleeping();
       const linearYBefore = nextLinearVelocity.y;
       let corrected = false;
       let touchedHorizontalBoundary = false;
@@ -841,8 +796,8 @@ export class DiceRollerScene {
         touchedVerticalBoundary = true;
       }
 
-      if (position.y < MIN_DIE_CENTER_HEIGHT) {
-        nextPosition.y = MIN_DIE_CENTER_HEIGHT;
+      if (position.y < BOUNDS_MIN_DIE_CENTER_HEIGHT) {
+        nextPosition.y = BOUNDS_MIN_DIE_CENTER_HEIGHT;
         corrected = true;
         touchedVerticalBoundary = true;
       }
@@ -858,7 +813,7 @@ export class DiceRollerScene {
       if (!corrected) continue;
 
       // Horizontal bounds should not cancel downward motion, otherwise dice can appear frozen in midair.
-      die.body.setTranslation(nextPosition, true);
+      die.body.setTranslation(nextPosition, wakeOnCorrection);
 
       if (touchedHorizontalBoundary && radial > 1e-4) {
         const normalX = position.x / radial;
@@ -874,12 +829,12 @@ export class DiceRollerScene {
         if (nextPosition.y >= MAX_DIE_CENTER_HEIGHT) {
           nextLinearVelocity.y = Math.min(0, nextLinearVelocity.y);
         }
-        if (nextPosition.y <= MIN_DIE_CENTER_HEIGHT) {
+        if (nextPosition.y <= BOUNDS_MIN_DIE_CENTER_HEIGHT) {
           nextLinearVelocity.y = Math.max(0, nextLinearVelocity.y);
         }
       }
 
-      die.body.setLinvel(nextLinearVelocity, true);
+      die.body.setLinvel(nextLinearVelocity, wakeOnCorrection);
       this.recordBoundsCorrectionDebug(this.dice.indexOf(die), {
         fromY: position.y,
         toY: nextPosition.y,
@@ -890,9 +845,9 @@ export class DiceRollerScene {
         linearYAfter: nextLinearVelocity.y,
       });
       if (touchedVerticalBoundary) {
-        die.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+        die.body.setAngvel({ x: 0, y: 0, z: 0 }, wakeOnCorrection);
       } else {
-        die.body.setAngvel(nextAngularVelocity, true);
+        die.body.setAngvel(nextAngularVelocity, wakeOnCorrection);
       }
     }
   }
@@ -936,18 +891,23 @@ export class DiceRollerScene {
       if (die.locked) return;
 
       if (this.isNearGroundCornerStand(index)) {
-        if (die.cornerAssistAttempts >= CORNER_ASSIST_MAX_ATTEMPTS) {
-          die.cornerAssistAttempts = CORNER_ASSIST_MAX_ATTEMPTS - 1;
+        if (die.cornerAssistAttempts >= FINAL_POSE_RECOVERY_ATTEMPTS) {
+          this.applyRecoveryToss(index);
+          die.cornerStandElapsed = 0;
+          die.cornerAssistCooldown = CORNER_ASSIST_COOLDOWN_SECONDS;
+          die.cornerAssistAttempts = 0;
+          resolved = false;
+          return;
         }
         if (!this.shouldAssistCornerStand(index)) {
           resolved = false;
           return;
         }
         // 贴地斜角站立只给一个小助推，让骰子自己滚正，不直接把姿态摆回目标面。
-        if (!this.applyCornerStandAssist(index)) return;
+        if (!this.applyCornerStandAssist(index, { upward: true })) return;
         die.cornerStandElapsed = 0;
         die.cornerAssistCooldown = CORNER_ASSIST_COOLDOWN_SECONDS;
-        die.cornerAssistAttempts = Math.min(die.cornerAssistAttempts + 1, CORNER_ASSIST_MAX_ATTEMPTS);
+        die.cornerAssistAttempts += 1;
         resolved = false;
         return;
       }
@@ -975,6 +935,7 @@ export class DiceRollerScene {
     this.dice.forEach((die, index) => {
       if (die.locked) return;
       die.cornerAssistCooldown = Math.max(0, die.cornerAssistCooldown - delta);
+      die.airborneRecoveryCooldown = Math.max(0, die.airborneRecoveryCooldown - delta);
 
       if (this.isNearGroundCornerStand(index)) {
         die.cornerStandElapsed += delta;
@@ -986,6 +947,7 @@ export class DiceRollerScene {
       die.airborneElapsed = this.isUnsupportedAirborne(index)
         ? die.airborneElapsed + delta
         : 0;
+      if (die.airborneElapsed === 0) die.airborneRecoveryCooldown = 0;
     });
   }
 
@@ -1054,6 +1016,14 @@ export class DiceRollerScene {
     }));
   }
 
+  private hasCandidateStackSupport(index: number) {
+    return Boolean(this.getSupportDie(index, {
+      overlapRatio: STACK_SUPPORT_CANDIDATE_OVERLAP_RATIO,
+      maxVerticalGap: DIE_SIZE * 1.45,
+      requireContact: false,
+    }));
+  }
+
   private getRestingHeight(index: number, requireContact = false) {
     const supportDie = this.getSupportDie(index, {
       overlapRatio: requireContact
@@ -1082,6 +1052,19 @@ export class DiceRollerScene {
     return touchingTray;
   }
 
+  private hasAnyTrayContact(die: DieItem) {
+    if (!this.world || !this.trayCollider) return false;
+
+    let touchingTray = false;
+    this.world.contactPair(die.collider, this.trayCollider, (manifold) => {
+      if (touchingTray) return;
+      if (Math.max(manifold.numContacts(), manifold.numSolverContacts()) === 0) return;
+      touchingTray = true;
+    });
+
+    return touchingTray;
+  }
+
   private isNearGroundCornerStand(index: number) {
     const die = this.dice[index];
     if (!die) return false;
@@ -1091,9 +1074,18 @@ export class DiceRollerScene {
     const nearTrayBase = position.y <= MIN_DIE_CENTER_HEIGHT + CORNER_STAND_HEIGHT_SLACK;
     return nearTrayBase
       && stableRestingHeight <= MIN_DIE_CENTER_HEIGHT + REST_HEIGHT_SNAP_SLACK
-      && this.hasTrayContact(die)
+      && this.hasAnyTrayContact(die)
       && !this.hasStackSupport(index)
       && this.isDieClearlyCornerStanding(die);
+  }
+
+  private isFinalPoseInvalid(index: number) {
+    const die = this.dice[index];
+    if (!die) return false;
+
+    const rotation = die.body.rotation();
+    const quaternion = new THREE.Quaternion(rotation.x, rotation.y, rotation.z, rotation.w);
+    return this.getTopFaceDot(quaternion) < FINAL_FACE_DOT;
   }
 
   private isUnsupportedAirborne(index: number) {
@@ -1101,23 +1093,21 @@ export class DiceRollerScene {
     if (!die) return false;
 
     const position = die.body.translation();
-    // 叠放结算允许短暂接触丢帧，先用候选支撑高度避免合法叠放被立刻拉回地面。
-    const restingHeight = this.getRestingHeight(index);
-    if (position.y <= restingHeight + REST_HEIGHT_SNAP_SLACK) return false;
-
     if (this.hasStackSupport(index)) return false;
     const stableRestingHeight = this.getRestingHeight(index, true);
     const restsOnTray = stableRestingHeight <= MIN_DIE_CENTER_HEIGHT + REST_HEIGHT_SNAP_SLACK;
-    if (restsOnTray && this.hasTrayContact(die)) return false;
+    if (restsOnTray) {
+      return position.y > MIN_DIE_CENTER_HEIGHT + REST_HEIGHT_SNAP_SLACK
+        || !this.hasAnyTrayContact(die);
+    }
 
-    return true;
+    return position.y > stableRestingHeight + REST_HEIGHT_SNAP_SLACK;
   }
 
   private shouldAssistCornerStand(index: number) {
     const die = this.dice[index];
     if (!die || die.cornerStandElapsed < CORNER_STAND_CONFIRM_SECONDS) return false;
-    if (die.cornerAssistAttempts >= CORNER_ASSIST_MAX_ATTEMPTS) return false;
-    if (die.cornerAssistCooldown > 0 || die.correctionMotion) return false;
+    if (die.cornerAssistCooldown > 0) return false;
 
     const linear = die.body.linvel();
     const angular = die.body.angvel();
@@ -1126,7 +1116,7 @@ export class DiceRollerScene {
   }
 
   // 贴地斜角只施加小幅抬升、横向回滚和扭矩，避免正常结果被突兀地几何复位。
-  private applyCornerStandAssist(index: number) {
+  private applyCornerStandAssist(index: number, { upward }: { upward: boolean }) {
     const die = this.dice[index];
     if (!die) return false;
 
@@ -1152,11 +1142,13 @@ export class DiceRollerScene {
 
     const attemptRatio = clamp01((die.cornerAssistAttempts + 1) / CORNER_ASSIST_MAX_ATTEMPTS);
     const angleRatio = clamp01(angle / RIGHT_ANGLE);
-    const upwardImpulse = THREE.MathUtils.lerp(
-      CORNER_ASSIST_UPWARD_IMPULSE_MIN,
-      CORNER_ASSIST_UPWARD_IMPULSE_MAX,
-      attemptRatio,
-    ) * THREE.MathUtils.lerp(0.8, 1, angleRatio);
+    const upwardImpulse = upward
+      ? THREE.MathUtils.lerp(
+        CORNER_ASSIST_UPWARD_IMPULSE_MIN,
+        CORNER_ASSIST_UPWARD_IMPULSE_MAX,
+        attemptRatio,
+      ) * THREE.MathUtils.lerp(0.8, 1, angleRatio)
+      : 0;
     const lateralImpulse = THREE.MathUtils.lerp(
       CORNER_ASSIST_LATERAL_IMPULSE_MIN,
       CORNER_ASSIST_LATERAL_IMPULSE_MAX,
@@ -1188,6 +1180,25 @@ export class DiceRollerScene {
     });
 
     return true;
+  }
+
+  private applyRecoveryToss(index: number) {
+    const die = this.dice[index];
+    if (!die) return;
+
+    const horizontalImpulse = randomHorizontalImpulse();
+    const torqueImpulse = randomTorqueImpulse();
+    die.body.wakeUp();
+    die.body.applyImpulse({
+      x: horizontalImpulse.x * 0.34,
+      y: 0.1,
+      z: horizontalImpulse.z * 0.34,
+    }, true);
+    die.body.applyTorqueImpulse({
+      x: torqueImpulse.x * 0.28,
+      y: torqueImpulse.y * 0.22,
+      z: torqueImpulse.z * 0.28,
+    }, true);
   }
 
   // 重置本轮骰子调试记录，方便从浏览器读取最近一次弹跳/助推次数。
@@ -1360,6 +1371,7 @@ export class DiceRollerScene {
       const hasStackSupport = this.hasStackSupport(dieIndex);
       const topFaceDot = this.getTopFaceDot(quaternion);
       const isCornerStanding = topFaceDot < CORNER_STAND_FACE_DOT;
+      const isFinalPoseInvalid = this.isFinalPoseInvalid(dieIndex);
 
       return {
         dieIndex,
@@ -1373,6 +1385,7 @@ export class DiceRollerScene {
         hasTrayContact,
         hasStackSupport,
         isCornerStanding,
+        isFinalPoseInvalid,
         isNearGroundCornerStand: this.isNearGroundCornerStand(dieIndex),
         isUnsupportedAirborne: this.isUnsupportedAirborne(dieIndex),
       };
@@ -1402,40 +1415,69 @@ export class DiceRollerScene {
   private startCorrectionMotion(index: number) {
     const die = this.dice[index];
     if (!die) return;
-    if (die.correctionMotion) return;
 
     const position = die.body.translation();
-    const current = die.body.rotation();
-    const startQuaternion = new THREE.Quaternion(current.x, current.y, current.z, current.w);
-    const targetPosition = new THREE.Vector3(position.x, this.getRestingHeight(index), position.z);
-    const targetQuaternion = startQuaternion.clone();
-    const verticalDistance = Math.max(0, position.y - targetPosition.y);
+    const targetHeight = this.getRestingHeight(index, true);
+    const verticalDistance = Math.max(0, position.y - targetHeight);
     this.recordCorrectionMotionDebug(index, {
       startHeight: position.y,
-      targetHeight: targetPosition.y,
+      targetHeight,
       verticalDistance,
     });
+
     die.body.wakeUp();
-    die.body.setLinvel({ x: 0, y: 0, z: 0 }, true);
-    die.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
-    die.correctionMotion = {
-      mode: 'drop',
-      angle: 0,
-      startPosition: new THREE.Vector3(position.x, position.y, position.z),
-      targetPosition,
-      startQuaternion,
-      targetQuaternion,
-      pivotLocal: undefined,
-      pivotWorld: undefined,
-      sinkDepth: 0,
-      reboundHeight: 0,
-      elapsed: 0,
-      duration: THREE.MathUtils.lerp(
-        CORRECTION_MOTION_MIN_SECONDS,
-        CORRECTION_MOTION_MAX_SECONDS,
-        THREE.MathUtils.clamp(verticalDistance / DIE_SIZE, 0, 1),
-      ),
-    };
+    const linear = die.body.linvel();
+    const linearSpeed = Math.hypot(linear.x, linear.y, linear.z);
+    if (
+      die.airborneElapsed >= AIRBORNE_RECOVERY_CONFIRM_SECONDS
+      && die.airborneRecoveryCooldown <= 0
+      && linearSpeed <= AIRBORNE_RECOVERY_MAX_LINEAR_SPEED
+    ) {
+      if (this.hasCandidateStackSupport(index)) {
+        die.body.setLinvel({
+          x: linear.x,
+          y: Math.min(linear.y, -AIRBORNE_STACK_RECOVERY_DOWNWARD_SPEED),
+          z: linear.z,
+        }, true);
+        die.airborneRecoveryCooldown = AIRBORNE_RECOVERY_COOLDOWN_SECONDS;
+        return;
+      }
+
+      const lateral = this.getAirborneRecoveryLateralDirection(index, position);
+      die.body.setLinvel({
+        x: lateral.x * AIRBORNE_RECOVERY_LATERAL_SPEED,
+        y: Math.min(linear.y, -AIRBORNE_RECOVERY_DOWNWARD_SPEED),
+        z: lateral.z * AIRBORNE_RECOVERY_LATERAL_SPEED,
+      }, true);
+      die.body.applyTorqueImpulse({
+        x: lateral.z * AIRBORNE_RECOVERY_TORQUE_IMPULSE,
+        y: 0,
+        z: -lateral.x * AIRBORNE_RECOVERY_TORQUE_IMPULSE,
+      }, true);
+      die.airborneRecoveryCooldown = AIRBORNE_RECOVERY_COOLDOWN_SECONDS;
+    }
+  }
+
+  private getAirborneRecoveryLateralDirection(index: number, position: RAPIER.Vector) {
+    let closest: RAPIER.Vector | undefined;
+    let closestDistanceSq = Infinity;
+
+    this.dice.forEach((candidate, candidateIndex) => {
+      if (candidateIndex === index) return;
+      const candidatePosition = candidate.body.translation();
+      if (candidatePosition.y >= position.y) return;
+      const distanceSq = ((position.x - candidatePosition.x) ** 2) + ((position.z - candidatePosition.z) ** 2);
+      if (distanceSq < closestDistanceSq) {
+        closestDistanceSq = distanceSq;
+        closest = candidatePosition;
+      }
+    });
+
+    const direction = closest
+      ? new THREE.Vector3(position.x - closest.x, 0, position.z - closest.z)
+      : new THREE.Vector3(-position.x, 0, -position.z);
+    if (direction.lengthSq() < 1e-6) direction.set(1, 0, 0);
+    return direction.normalize();
   }
 
   private getTopFace(die: DieItem) {

@@ -10,6 +10,7 @@ pnpm build
 pnpm test
 pnpm lint
 pnpm typecheck
+pnpm test:web-game -- --url http://127.0.0.1:5173/ --click-selector ".mode-card.primary" --actions-file ../../.codex/skills/develop-web-game/references/action_payloads.json
 ```
 
 在 monorepo 根目录也可以使用：
@@ -20,7 +21,10 @@ pnpm build:coin-pusher
 pnpm test:coin-pusher
 pnpm lint:coin-pusher
 pnpm typecheck:coin-pusher
+pnpm test:coin-pusher:web-game -- --url http://127.0.0.1:5173/ --click-selector ".mode-card.primary" --actions-file .codex/skills/develop-web-game/references/action_payloads.json
 ```
+
+`test:web-game` 是 `develop-web-game` 技能客户端的项目内 wrapper。不要直接从仓库根目录执行 `.codex/skills/develop-web-game/scripts/web_game_playwright_client.js`：该脚本是 ESM，且 `playwright` 安装在 `apps/coin-pusher/node_modules`，直接执行会同时遇到模块类型和依赖解析问题。
 
 ## 当前设计方向
 
