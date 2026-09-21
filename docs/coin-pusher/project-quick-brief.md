@@ -4,14 +4,17 @@
 
 - 技术栈是 `Vite 6`、`React 19`、`TypeScript`、`Three.js`、`Rapier 3D`、`Vitest`。
 - 当前项目位于 `apps/coin-pusher`，是 monorepo 下的独立 Vite 应用。
-- 玩法入口包含摇骰子和语音调试；推币机原型和老虎机原型处于冻结状态，代码保留但 UI 入口暂不开放。
+- 玩法入口包含图片生成、摇骰子、老虎机和语音调试，四者都走独立路由页面；推币机原型处于冻结状态，代码保留但 UI 入口暂不开放。
+- 老虎机构建为独立全屏霓虹原型，不做 Megaways，采用固定 5 轴 3 行、Wild、Scatter、免费旋转、彩金和狂热奖励演出。
 - `docs/coin-pusher` 目前只保留项目快速摘要与目录结构，旧设计方案文档已清理，后续方案重新补充。
+- 已新增 `docs/coin-pusher/monopoly-design-draft.md`，用于承接独立大富翁玩法的首版规则草案。
 
 ## 关键入口
 
 - 应用入口：`apps/coin-pusher/src/main.tsx`
 - React 壳与玩法选择：`apps/coin-pusher/src/App.tsx`
 - 路由定义：`apps/coin-pusher/src/appRoutes.ts`
+- 图片生成页面：`apps/coin-pusher/src/image/ImageRoutePage.tsx`
 - 骰子玩法 UI：`apps/coin-pusher/src/dice/DiceGame.tsx`
 - 骰子物理场景：`apps/coin-pusher/src/dice/DiceRollerScene.ts`
 - 推币机主体：`apps/coin-pusher/src/machine/CoinPusherMachine.ts`
@@ -21,12 +24,15 @@
 
 - `apps/coin-pusher/src/core`：游戏状态、结算与配置核心逻辑。
 - `apps/coin-pusher/src/machine`：冻结保留的推币机机柜与主玩法原型。
-- `apps/coin-pusher/src/slot`：冻结保留的老虎机桥接与控制器。
-- `apps/coin-pusher/src/dice`：摇骰子玩法、UI 和物理场景。
+- `apps/coin-pusher/src/slot`：老虎机页面壳与全屏 React 原型都放在本目录，通过 `/slot` 路由进入，负责符号图案、固定 5x3 回合生成、奖励桥接与控制器。
+- `apps/coin-pusher/src/image`：图片页面壳与生成面板都放在本目录，通过 `/image` 路由进入，请求 `/api/images/generations`，本地由 Vite 代理注入 key，部署端由 Vercel serverless 读取服务端环境变量。
+- `apps/coin-pusher/src/dice`：骰子页面壳、玩法 UI 和物理场景都放在本目录，通过 `/dice` 路由进入。
+- `apps/coin-pusher/src/voice`：语音调试页面壳与接口封装都放在本目录，通过 `/voice-debug` 路由进入。
 - `apps/coin-pusher/src/audio`：音频播放与控制。
 - `apps/coin-pusher/src/voice`：语音调试页与接口封装。
 - `apps/coin-pusher/README.md`：当前设计方向、运行命令和骰子物理调试入口。
 - `docs/coin-pusher`：只保留项目快速摘要与目录结构。
+- `docs/coin-pusher/monopoly-design-draft.md`：独立大富翁玩法草案，包含地图、事件频率、建筑费用和 MVP 范围。
 
 ## 本次骰子物理防回退方向
 
@@ -41,9 +47,9 @@
 
 ## 冻结状态
 
-- 推币机和老虎机当前不继续按旧设计方案推进。
+- 推币机当前不继续按旧设计方案推进。
 - `src/GameApp.ts`、`src/machine`、`src/slot` 仍保留，便于后续重新启动方案时复用或对照。
-- 首页推币机与老虎机入口保持 disabled，避免把冻结原型误当成当前可交付玩法。
+- 首页推币机入口保持 disabled，避免把冻结原型误当成当前可交付玩法；老虎机入口已重新开放为独立原型。
 
 ## 细调方法
 

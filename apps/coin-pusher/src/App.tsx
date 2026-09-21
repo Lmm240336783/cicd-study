@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import { GameApp } from './GameApp';
-import { DiceGame } from './dice/DiceGame';
-import { HOME_ROUTE, VOICE_DEBUG_ROUTE } from './appRoutes';
-import { VoiceDebugPage } from './voice/VoiceDebugPage';
+import { DICE_ROUTE, HOME_ROUTE, IMAGE_GENERATOR_ROUTE, SLOT_ROUTE, VOICE_DEBUG_ROUTE } from './appRoutes';
+import { DiceRoutePage } from './dice/DiceRoutePage';
+import { ImageRoutePage } from './image/ImageRoutePage';
+import { SlotRoutePage } from './slot/SlotRoutePage';
+import { VoiceDebugRoutePage } from './voice/VoiceDebugRoutePage';
 
-type AppMode = 'home' | 'dice' | 'pusher' | 'slot';
+type AppMode = 'home' | 'pusher';
 
 function PusherGame() {
   const hostRef = useRef<HTMLDivElement | null>(null);
@@ -23,9 +25,17 @@ function PusherGame() {
   return <div id="game-root" ref={hostRef} />;
 }
 
-function HomeScreen({ onSelect, onOpenVoiceDebug }: { onSelect: (mode: AppMode) => void; onOpenVoiceDebug: () => void }) {
-  const openDice = () => onSelect('dice');
-
+function HomeScreen({
+  onOpenDice,
+  onOpenImageGenerator,
+  onOpenSlot,
+  onOpenVoiceDebug,
+}: {
+  onOpenDice: () => void;
+  onOpenImageGenerator: () => void;
+  onOpenSlot: () => void;
+  onOpenVoiceDebug: () => void;
+}) {
   return (
     <main className="mode-shell">
       <section className="mode-hero">
@@ -35,7 +45,17 @@ function HomeScreen({ onSelect, onOpenVoiceDebug }: { onSelect: (mode: AppMode) 
       </section>
 
       <section className="mode-grid" aria-label="玩法入口">
-        <button className="mode-card primary" type="button" onClick={openDice} onPointerUp={openDice}>
+        <button
+          className="mode-card image-entry"
+          type="button"
+          onClick={onOpenImageGenerator}
+          onPointerUp={onOpenImageGenerator}
+        >
+          <span className="mode-icon image">图</span>
+          <strong>生成图片</strong>
+          <small>输入提示词生成 base64 PNG，支持 1K、2K、4K 和下载</small>
+        </button>
+        <button className="mode-card primary" type="button" onClick={onOpenDice} onPointerUp={onOpenDice}>
           <span className="mode-icon">骰</span>
           <strong>摇骰子</strong>
           <small>设置骰子、锁定、盖罩、摇晃、统计点数</small>
@@ -50,24 +70,11 @@ function HomeScreen({ onSelect, onOpenVoiceDebug }: { onSelect: (mode: AppMode) 
           <strong>推币机</strong>
           <small>暂不改动，保留当前原型</small>
         </button>
-        <button className="mode-card disabled" type="button" disabled>
+        <button className="mode-card slot-entry" type="button" onClick={onOpenSlot} onPointerUp={onOpenSlot}>
           <span className="mode-icon">机</span>
           <strong>老虎机</strong>
-          <small>暂缓处理，后续作为金币来源</small>
+          <small>霓虹全屏演出，Wild、Scatter、免费旋转和彩金爆发</small>
         </button>
-      </section>
-    </main>
-  );
-}
-
-function SlotPlaceholder({ onBack }: { onBack: () => void }) {
-  return (
-    <main className="mode-shell">
-      <button className="back-button" type="button" onClick={onBack}>返回</button>
-      <section className="mode-hero">
-        <span className="mode-kicker">暂缓处理</span>
-        <h1>老虎机</h1>
-        <p>当前先不调整老虎机逻辑，后续再做成赚金币的独立玩法。</p>
       </section>
     </main>
   );
@@ -77,7 +84,6 @@ function HomeRoute() {
   const [mode, setMode] = useState<AppMode>('home');
   const navigate = useNavigate();
 
-  if (mode === 'dice') return <DiceGame onBack={() => setMode('home')} />;
   if (mode === 'pusher') {
     return (
       <>
@@ -86,20 +92,24 @@ function HomeRoute() {
       </>
     );
   }
-  if (mode === 'slot') return <SlotPlaceholder onBack={() => setMode('home')} />;
-  return <HomeScreen onSelect={setMode} onOpenVoiceDebug={() => navigate(VOICE_DEBUG_ROUTE)} />;
-}
-
-function VoiceDebugRoute() {
-  const navigate = useNavigate();
-  return <VoiceDebugPage onBack={() => navigate(HOME_ROUTE)} />;
+  return (
+    <HomeScreen
+      onOpenDice={() => navigate(DICE_ROUTE)}
+      onOpenImageGenerator={() => navigate(IMAGE_GENERATOR_ROUTE)}
+      onOpenSlot={() => navigate(SLOT_ROUTE)}
+      onOpenVoiceDebug={() => navigate(VOICE_DEBUG_ROUTE)}
+    />
+  );
 }
 
 export function App() {
   return (
     <Routes>
       <Route path={HOME_ROUTE} element={<HomeRoute />} />
-      <Route path={VOICE_DEBUG_ROUTE} element={<VoiceDebugRoute />} />
+      <Route path={DICE_ROUTE} element={<DiceRoutePage />} />
+      <Route path={IMAGE_GENERATOR_ROUTE} element={<ImageRoutePage />} />
+      <Route path={SLOT_ROUTE} element={<SlotRoutePage />} />
+      <Route path={VOICE_DEBUG_ROUTE} element={<VoiceDebugRoutePage />} />
       <Route path="*" element={<Navigate to={HOME_ROUTE} replace />} />
     </Routes>
   );

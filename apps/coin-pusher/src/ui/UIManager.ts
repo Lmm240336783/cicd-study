@@ -130,9 +130,9 @@ export class UIManager {
   // 将内部抽奖结果转成中文图案，避免枚举名直接暴露在游戏界面。
   private symbolForResult(result: SlotResult, index: number) {
     const byType: Record<SlotResult['type'], string> = {
+      noWin: SLOT_SYMBOLS[Math.floor(Math.random() * SLOT_SYMBOLS.length)] ?? '金币',
       smallCoins: '金币',
       mediumCoins: index === 1 ? '皇冠' : '金币',
-      energy: '星星',
       specialCoin: result.specialCoin ? SPECIAL_COIN_LABELS[result.specialCoin] : '万能',
       jackpot: '皇冠',
       fever: '万能',

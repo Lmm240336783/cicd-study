@@ -285,7 +285,7 @@ export class DiceRollerScene {
   private readonly dice: DieItem[] = [];
   private readonly cover = new THREE.Group();
   private readonly dieGeometry = new RoundedBoxGeometry(DIE_SIZE, DIE_SIZE, DIE_SIZE, 5, 0.08);
-  private readonly pipGeometry = new THREE.CircleGeometry(DIE_SIZE * 0.055, 18);
+  private readonly pipGeometry = new THREE.CircleGeometry(DIE_SIZE * 0.1, 18);
   private readonly trayGeometry = new THREE.CylinderGeometry(TRAY_RADIUS, TRAY_RADIUS, 0.34, 96);
   private readonly coverWallGeometry = new THREE.CylinderGeometry(2.14, 2.36, 2.5, 80, 1, true);
   private readonly coverTopGeometry = new THREE.CylinderGeometry(2.14, 2.14, 0.16, 80);
@@ -332,7 +332,7 @@ export class DiceRollerScene {
   constructor(
     private readonly host: HTMLElement,
     private readonly options: DiceRollerSceneOptions,
-  ) {}
+  ) { }
 
   async init() {
     await RAPIER.init();

@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1600" height="1200" viewBox="0 0 1600 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="180" y1="80" x2="1430" y2="1080" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#060816"/>
+      <stop offset="0.52" stop-color="#111936"/>
+      <stop offset="1" stop-color="#210B2F"/>
+    </linearGradient>
+    <radialGradient id="auroraA" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(320 250) rotate(90) scale(360 420)">
+      <stop stop-color="#60A5FA" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#60A5FA" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="auroraB" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1240 230) rotate(90) scale(320 400)">
+      <stop stop-color="#F472B6" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#F472B6" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="floorGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(800 990) rotate(90) scale(120 480)">
+      <stop stop-color="#FDE68A" stop-opacity="0.36"/>
+      <stop offset="1" stop-color="#FDE68A" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="machineBody" x1="430" y1="170" x2="1120" y2="1010" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF9A7A"/>
+      <stop offset="0.26" stop-color="#EF4444"/>
+      <stop offset="0.72" stop-color="#991B1B"/>
+      <stop offset="1" stop-color="#450A0A"/>
+    </linearGradient>
+    <linearGradient id="machineSide" x1="980" y1="230" x2="1140" y2="960" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FDBA74"/>
+      <stop offset="0.25" stop-color="#FB7185"/>
+      <stop offset="1" stop-color="#3F0A16"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="500" y1="120" x2="1040" y2="960" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF5B7"/>
+      <stop offset="0.33" stop-color="#FCD34D"/>
+      <stop offset="0.7" stop-color="#F59E0B"/>
+      <stop offset="1" stop-color="#9A6700"/>
+    </linearGradient>
+    <linearGradient id="darkPanel" x1="560" y1="280" x2="1050" y2="760" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#10203A"/>
+      <stop offset="1" stop-color="#060B16"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#FFFFFF" stop-opacity="0.35"/>
+      <stop offset="0.28" stop-color="#BFDBFE" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#60A5FA" stop-opacity="0.02"/>
+    </linearGradient>
+    <linearGradient id="neonPink" x1="520" y1="205" x2="1010" y2="300" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F9A8D4"/>
+      <stop offset="1" stop-color="#EC4899"/>
+    </linearGradient>
+    <linearGradient id="screenLight" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#0EA5E9" stop-opacity="0.22"/>
+      <stop offset="0.5" stop-color="#A78BFA" stop-opacity="0.10"/>
+      <stop offset="1" stop-color="#FDE68A" stop-opacity="0.12"/>
+    </linearGradient>
+    <filter id="drop" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="32" stdDeviation="28" flood-color="#020617" flood-opacity="0.45"/>
+    </filter>
+    <filter id="glowGold" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="0" stdDeviation="12" flood-color="#FDE68A" flood-opacity="0.5"/>
+      <feDropShadow dx="0" dy="0" stdDeviation="26" flood-color="#F59E0B" flood-opacity="0.22"/>
+    </filter>
+    <filter id="glowPink" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="0" stdDeviation="12" flood-color="#F472B6" flood-opacity="0.45"/>
+      <feDropShadow dx="0" dy="0" stdDeviation="24" flood-color="#A855F7" flood-opacity="0.20"/>
+    </filter>
+    <filter id="glowBlue" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="0" stdDeviation="12" flood-color="#7DD3FC" flood-opacity="0.46"/>
+      <feDropShadow dx="0" dy="0" stdDeviation="24" flood-color="#2563EB" flood-opacity="0.18"/>
+    </filter>
+    <filter id="sparkGlow" x="-120%" y="-120%" width="340%" height="340%">
+      <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#FFFFFF" flood-opacity="0.9"/>
+      <feDropShadow dx="0" dy="0" stdDeviation="16" flood-color="#FDE68A" flood-opacity="0.36"/>
+    </filter>
+    <style>
+      text {
+        font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+      }
+      .title {
+        fill: #FFF8E8;
+        font-size: 94px;
+        font-weight: 900;
+        letter-spacing: 6px;
+      }
+      .subtitle {
+        fill: #D6E6FF;
+        font-size: 28px;
+        font-weight: 600;
+        letter-spacing: 1.5px;
+      }
+      .jackpot {
+        fill: #FFF6BF;
+        font-size: 48px;
+        font-weight: 900;
+        letter-spacing: 4px;
+      }
+      .small {
+        fill: #D1D5DB;
+        font-size: 24px;
+        font-weight: 700;
+      }
+      .mini {
+        fill: #A5B4FC;
+        font-size: 22px;
+        font-weight: 600;
+      }
+    </style>
+  </defs>
+
+  <rect width="1600" height="1200" rx="48" fill="url(#bg)"/>
+  <rect width="1600" height="1200" rx="48" fill="url(#auroraA)"/>
+  <rect width="1600" height="1200" rx="48" fill="url(#auroraB)"/>
+  <ellipse cx="800" cy="1000" rx="520" ry="120" fill="url(#floorGlow)"/>
+  <path d="M90 1000C380 930 710 920 1000 962C1220 994 1384 1012 1510 996" stroke="#F8FAFC" stroke-opacity="0.12" stroke-width="6" stroke-linecap="round"/>
+
+  <g filter="url(#glowGold)">
+    <text x="800" y="130" text-anchor="middle" class="title">LUCKY NEON 777</text>
+  </g>
+  <text x="800" y="178" text-anchor="middle" class="subtitle">3D 炫彩老虎机视觉稿 · 霓虹质感 · 高对比高光</text>
+
+  <g filter="url(#drop)">
+    <path d="M498 202C498 160 530 128 572 128H912C932 128 951 136 965 150L1072 258C1086 272 1094 291 1094 312V872C1094 922 1054 962 1004 962H572C530 962 498 930 498 888V202Z" fill="url(#machineBody)"/>
+    <path d="M912 128C935 128 955 137 969 151L1071 254C1087 270 1094 290 1094 312V872C1094 922 1054 962 1004 962H955C998 962 1032 922 1032 872V324C1032 304 1024 286 1010 272L903 165C889 151 870 143 850 143H572C530 143 498 175 498 217V202C498 160 530 128 572 128H912Z" fill="url(#machineSide)" fill-opacity="0.88"/>
+    <path d="M566 156H890C914 156 937 165 953 182L1038 270C1048 280 1054 293 1054 307V875C1054 904 1031 928 1002 928H566C537 928 514 904 514 875V208C514 179 537 156 566 156Z" stroke="url(#gold)" stroke-width="18"/>
+  </g>
+
+  <path d="M574 154H886C905 154 923 161 937 174L1024 258C1041 275 1050 298 1050 322V340H934C898 340 870 312 870 276V154H574Z" fill="#641220" fill-opacity="0.65"/>
+  <path d="M548 186C650 132 790 112 934 150" stroke="#FFF6BF" stroke-opacity="0.28" stroke-width="12" stroke-linecap="round"/>
+
+  <g filter="url(#glowPink)">
+    <rect x="590" y="200" width="412" height="110" rx="34" fill="#5B1020" stroke="url(#gold)" stroke-width="10"/>
+    <rect x="610" y="220" width="372" height="24" rx="12" fill="#FFFFFF" fill-opacity="0.16"/>
+    <text x="796" y="272" text-anchor="middle" class="jackpot">MEGA JACKPOT</text>
+  </g>
+
+  <g filter="url(#glowBlue)">
+    <rect x="572" y="352" width="454" height="368" rx="44" fill="url(#darkPanel)" stroke="url(#gold)" stroke-width="12"/>
+    <rect x="572" y="352" width="454" height="368" rx="44" fill="url(#screenLight)"/>
+    <path d="M610 390C708 342 840 342 986 430" stroke="#FFFFFF" stroke-opacity="0.18" stroke-width="14" stroke-linecap="round"/>
+  </g>
+
+  <g>
+    <rect x="618" y="404" width="106" height="266" rx="26" fill="#F8FAFC"/>
+    <rect x="748" y="404" width="106" height="266" rx="26" fill="#F8FAFC"/>
+    <rect x="878" y="404" width="106" height="266" rx="26" fill="#F8FAFC"/>
+    <rect x="618" y="404" width="106" height="266" rx="26" fill="url(#glass)"/>
+    <rect x="748" y="404" width="106" height="266" rx="26" fill="url(#glass)"/>
+    <rect x="878" y="404" width="106" height="266" rx="26" fill="url(#glass)"/>
+  </g>
+
+  <g transform="translate(650 442)">
+    <circle cx="22" cy="28" r="22" fill="#FBBF24"/>
+    <path d="M22 2L28 18H45L31 28L36 44L22 35L8 44L13 28L-1 18H16L22 2Z" fill="#FFF3B0"/>
+    <rect x="-4" y="100" width="52" height="52" rx="14" fill="#22C55E"/>
+    <circle cx="22" cy="126" r="17" fill="#BBF7D0"/>
+    <path d="M22 112V140M8 126H36" stroke="#166534" stroke-width="7" stroke-linecap="round"/>
+    <path d="M-4 194H48L22 238L-4 194Z" fill="#3B82F6"/>
+  </g>
+
+  <g transform="translate(780 438)">
+    <rect x="-4" y="0" width="56" height="56" rx="16" fill="#EF4444"/>
+    <path d="M24 10L31 24L46 26L35 36L39 51L24 43L9 51L13 36L2 26L17 24L24 10Z" fill="#FFF0A8"/>
+    <circle cx="24" cy="126" r="26" fill="#F59E0B"/>
+    <circle cx="24" cy="126" r="15" fill="#FEF3C7"/>
+    <path d="M24 100C39 100 50 111 50 126C50 141 39 152 24 152C9 152 -2 141 -2 126C-2 111 9 100 24 100Z" stroke="#B45309" stroke-width="5"/>
+    <path d="M4 198H44L34 236H14L4 198Z" fill="#A855F7"/>
+    <rect x="16" y="184" width="16" height="14" rx="5" fill="#D8B4FE"/>
+  </g>
+
+  <g transform="translate(908 438)">
+    <path d="M0 6H48V54H0Z" fill="#0EA5E9"/>
+    <path d="M24 12L42 30L24 48L6 30L24 12Z" fill="#DBF4FF"/>
+    <rect x="0" y="98" width="48" height="48" rx="12" fill="#F43F5E"/>
+    <text x="24" y="135" text-anchor="middle" fill="#FFF1F2" font-size="34" font-weight="900">7</text>
+    <circle cx="24" cy="214" r="24" fill="#22C55E"/>
+    <text x="24" y="222" text-anchor="middle" fill="#ECFDF5" font-size="20" font-weight="900">XP</text>
+  </g>
+
+  <g>
+    <rect x="574" y="756" width="452" height="132" rx="34" fill="#581C87" fill-opacity="0.48" stroke="url(#gold)" stroke-width="10"/>
+    <rect x="598" y="776" width="404" height="18" rx="9" fill="#FFFFFF" fill-opacity="0.12"/>
+    <circle cx="650" cy="822" r="28" fill="#38BDF8"/>
+    <circle cx="734" cy="822" r="28" fill="#22C55E"/>
+    <circle cx="818" cy="822" r="28" fill="#F59E0B"/>
+    <circle cx="902" cy="822" r="28" fill="#F43F5E"/>
+    <rect x="952" y="790" width="92" height="64" rx="20" fill="#FBBF24"/>
+    <text x="998" y="832" text-anchor="middle" fill="#111827" font-size="24" font-weight="900">SPIN</text>
+  </g>
+
+  <g filter="url(#glowGold)">
+    <rect x="640" y="904" width="300" height="88" rx="24" fill="#090F1E" stroke="url(#gold)" stroke-width="8"/>
+    <rect x="660" y="920" width="260" height="18" rx="9" fill="#FFFFFF" fill-opacity="0.12"/>
+    <text x="790" y="964" text-anchor="middle" fill="#FDE68A" font-size="46" font-weight="900">WIN x128</text>
+  </g>
+
+  <g transform="translate(1090 428)">
+    <path d="M0 0C62 -8 104 34 104 96C104 150 72 202 20 232" stroke="url(#gold)" stroke-width="22" stroke-linecap="round"/>
+    <circle cx="18" cy="232" r="28" fill="#111827" stroke="url(#gold)" stroke-width="12"/>
+    <circle cx="18" cy="232" r="12" fill="#FDE68A"/>
+  </g>
+
+  <g>
+    <path d="M618 1000H964L934 1060H650L618 1000Z" fill="#64748B"/>
+    <rect x="658" y="1018" width="268" height="20" rx="10" fill="#94A3B8"/>
+    <path d="M640 1048C714 1070 866 1070 940 1048" stroke="#E2E8F0" stroke-opacity="0.35" stroke-width="8" stroke-linecap="round"/>
+  </g>
+
+  <g filter="url(#sparkGlow)">
+    <path d="M472 250L480 272H502L484 284L492 306L472 292L452 306L460 284L442 272H464L472 250Z" fill="#FFF7ED"/>
+    <path d="M1126 206L1132 222H1148L1136 232L1142 248L1126 238L1110 248L1116 232L1104 222H1120L1126 206Z" fill="#FFF7ED"/>
+    <path d="M1182 304L1186 316H1198L1188 324L1192 336L1182 330L1172 336L1176 324L1166 316H1178L1182 304Z" fill="#FDE68A"/>
+  </g>
+
+  <g>
+    <text x="800" y="1128" text-anchor="middle" class="small">适合拿来做推币机 / 老虎机概念图、宣传封面或游戏 UI 参考</text>
+    <text x="800" y="1164" text-anchor="middle" class="mini">高饱和霓虹 + 金属高光 + 轻透视 3D 感</text>
+  </g>
+</svg>

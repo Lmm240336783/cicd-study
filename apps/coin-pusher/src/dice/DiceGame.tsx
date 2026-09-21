@@ -129,26 +129,29 @@ export function DiceGame({ onBack }: DiceGameProps) {
     <main className="dice-shell">
       <header className="dice-header">
         <button className="back-button" type="button" onClick={onBack}>返回</button>
-        <div>
+        <div className="dice-header-copy">
           <h1>摇骰子</h1>
         </div>
       </header>
 
       <section className="dice-controls" aria-label="骰子设置">
-        <label className="dice-count-control">
-          <span>骰子个数</span>
-          <input
-            type="range"
-            min={MIN_DICE}
-            max={MAX_DICE}
-            value={diceCount}
-            onChange={(event) => updateDiceCount(Number(event.target.value))}
-          />
-          <strong>{diceCount}</strong>
-        </label>
-        <button className="cover-toggle" type="button" onClick={() => setCoverOpen((value) => !value)}>
-          {coverOpen ? '关闭罩子' : '打开罩子'}
-        </button>
+        <div className="dice-controls-card">
+          <div className="dice-controls-heading">
+            <strong>操作面板</strong>
+          </div>
+          <label className="dice-count-control" htmlFor="dice-count-range">
+            <span>骰子个数</span>
+            <input
+              id="dice-count-range"
+              type="range"
+              min={MIN_DICE}
+              max={MAX_DICE}
+              value={diceCount}
+              onChange={(event) => updateDiceCount(Number(event.target.value))}
+            />
+            <strong>{diceCount}</strong>
+          </label>
+        </div>
       </section>
 
       <section className="dice-stage" aria-label="骰子区域">
@@ -171,34 +174,46 @@ export function DiceGame({ onBack }: DiceGameProps) {
             </div>
           </div>
 
-          <div className="dice-locks" aria-label="骰子锁定">
-            {visibleFaces.map((face, index) => (
-              <button
-                className={`dice-lock ${locked[index] ? 'active' : ''}`}
-                type="button"
-                key={index}
-                onClick={() => toggleLock(index)}
-                aria-pressed={locked[index]}
-                aria-label={`${index + 1}号骰子${face}点，${locked[index] ? '已锁定' : '未锁定'}`}
-                title={`${index + 1}号骰子`}
-              >
-                {index + 1}号
-              </button>
-            ))}
-          </div>
+          <section className="dice-lock-panel" aria-label="骰子锁定">
+            <div className="dice-lock-panel-heading">
+              <span>保留结果</span>
+              <strong>点击锁定想留下的骰子</strong>
+            </div>
+            <div className="dice-locks">
+              {visibleFaces.map((face, index) => (
+                <button
+                  className={`dice-lock ${locked[index] ? 'active' : ''}`}
+                  type="button"
+                  key={index}
+                  onClick={() => toggleLock(index)}
+                  aria-pressed={locked[index]}
+                  aria-label={`${index + 1}号骰子${face}点，${locked[index] ? '已锁定' : '未锁定'}`}
+                  title={`${index + 1}号骰子`}
+                >
+                  <span>{index + 1}号</span>
+                  <strong>{face}点</strong>
+                </button>
+              ))}
+            </div>
+          </section>
         </div>
       </section>
 
-      <section className="top-face-summary" aria-label="朝上最多点数">
-        <span>朝上最多</span>
-        <strong>{maxFaceLabel}</strong>
-        <small>{maxFaceCount} 颗</small>
-      </section>
-
       <footer className="dice-actions">
-        <button className="shake-button" type="button" onClick={shakeDice}>
-          摇
-        </button>
+        <section className="top-face-summary is-hidden" aria-label="朝上最多点数" hidden>
+          <span>当前结果</span>
+          <strong>{maxFaceLabel}</strong>
+          <small>{maxFaceCount} 颗</small>
+        </section>
+        <div className="dice-actions-main">
+          <button className="cover-toggle cover-toggle-inline" type="button" onClick={() => setCoverOpen((value) => !value)}>
+            <strong>{coverOpen ? '关闭罩子' : '打开罩子'}</strong>
+          </button>
+          <button className="shake-button" type="button" onClick={shakeDice}>
+            <span>摇一摇</span>
+            <small>锁定后继续下一轮</small>
+          </button>
+        </div>
       </footer>
     </main>
   );

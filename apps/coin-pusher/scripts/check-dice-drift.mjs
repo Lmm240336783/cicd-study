@@ -1,3 +1,5 @@
+/* global document, sessionStorage, window */
+
 import { chromium } from 'playwright';
 import fs from 'node:fs';
 import os from 'node:os';

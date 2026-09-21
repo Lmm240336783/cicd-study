@@ -1,0 +1,6 @@
+﻿{
+  "model": "gpt-image-2",
+  "prompt": "Use case: photorealistic-natural. Asset type: standalone preview image. Primary request: a cute cat sitting on a sunlit windowsill, realistic fur detail, warm natural light, soft background blur. Style/medium: photorealistic. Composition/framing: medium close-up, centered subject. Lighting/mood: cozy and calm morning sunlight. Constraints: no text, no watermark.",
+  "size": "1024x1024",
+  "quality": "medium"
+}

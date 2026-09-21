@@ -1,0 +1,6 @@
+{
+  "model": "gpt-image-2",
+  "prompt": "A cute cat sitting on a sunlit windowsill, photorealistic, warm natural light, soft background blur, no text, no watermark.",
+  "size": "1024x1024",
+  "quality": "low"
+}
